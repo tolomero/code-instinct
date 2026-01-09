@@ -21,6 +21,8 @@ export const useAIQuestion = (targetBoss, gameMode, currentLevel, usedQuestions,
         const topic = forcedTopic || 
           (targetBoss.logicType === 'fizzbuzz' ? 'aritmética y lógica JS' : 
            targetBoss.logicType === 'fibonacci' ? 'algoritmos y recursividad (Fibonacci)' :
+           targetBoss.logicType === 'primo' ? 'números primos y divisibilidad' :
+           targetBoss.logicType === 'poligono' ? 'geometría y cálculo de áreas' :
            'manipulación de strings y arrays');
         const levelText = currentLevel === 0 ? 'principiante' : 'intermedio';
         const prompt = `Genera una pregunta técnica de JS nivel ${levelText} sobre ${topic}. Evita preguntas repetidas. Responde solo JSON: { "text": "...", "options": ["...", "..."], "correct": 0, "type": "choice", "damage": 50, "solution": "..." }`;
@@ -39,6 +41,8 @@ export const useAIQuestion = (targetBoss, gameMode, currentLevel, usedQuestions,
       } catch (e) {
         const pool = targetBoss.logicType === 'fizzbuzz' ? QUESTION_MOCKS.fizzbuzz_minions : 
                      targetBoss.logicType === 'fibonacci' ? QUESTION_MOCKS.fibonacci_minions :
+                     targetBoss.logicType === 'primo' ? QUESTION_MOCKS.primo_minions :
+                     targetBoss.logicType === 'poligono' ? QUESTION_MOCKS.poligono_minions :
                      QUESTION_MOCKS.anagram_minions;
         setAiLoading(false);
         return { ...pool[Math.floor(Math.random() * pool.length)], lore: "Enlace IA perdido. Backup cargado." };
@@ -47,6 +51,8 @@ export const useAIQuestion = (targetBoss, gameMode, currentLevel, usedQuestions,
 
     const poolKey = targetBoss.logicType === 'fizzbuzz' ? 'fizzbuzz_minions' : 
                     targetBoss.logicType === 'fibonacci' ? 'fibonacci_minions' :
+                    targetBoss.logicType === 'primo' ? 'primo_minions' :
+                    targetBoss.logicType === 'poligono' ? 'poligono_minions' :
                     'anagram_minions';
     const pool = QUESTION_MOCKS[poolKey];
     
@@ -56,7 +62,7 @@ export const useAIQuestion = (targetBoss, gameMode, currentLevel, usedQuestions,
       available = pool;
     }
 
-    const q = available[Math.floor(Math.random() * available.length)];
+    const q = available.sort(() => Math.random() - 0.5)[Math.floor(Math.random() * available.length)];
     setUsedQuestions(prev => [...prev, q.text]);
     return { ...q, lore: `Secuaz de ${targetBoss.name} bloqueando el acceso.` };
   };

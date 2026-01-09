@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Home } from 'lucide-react';
 
 // Constants
-import { LORE_CHARACTERS, QUESTION_MOCKS, BOSS_CHARACTERS } from './constants/gameData';
+import { LORE_CHARACTERS, QUESTION_MOCKS, BOSS_CHARACTERS, PLAYER_CHARACTERS } from './constants/gameData';
 
 // Screens
 import StartScreen from './components/screens/StartScreen';
 import BossSelection from './components/screens/BossSelection';
+import CharacterSelection from './components/screens/CharacterSelection';
 import OutcomeScreen from './components/screens/OutcomeScreen';
 
 // Game Components
@@ -29,6 +30,7 @@ import ExitConfirmationOverlay from './components/overlays/ExitConfirmationOverl
 import SolutionOverlay from './components/overlays/SolutionOverlay';
 export default function App() {
   const [gameState, setGameState] = useState('start'); 
+  const [selectedPlayer, setSelectedPlayer] = useState(PLAYER_CHARACTERS[1]); // Naruto por defecto (index 1)
   const [gameMode, setGameMode] = useState('arcade'); 
   const [currentLevel, setCurrentLevel] = useState(0);
   const [opponent, setOpponent] = useState(null);
@@ -49,6 +51,10 @@ export default function App() {
   const [hasShield, setHasShield] = useState(false);
   const [usedQuestions, setUsedQuestions] = useState([]);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
+  const [boughtHint, setBoughtHint] = useState(false);
+  const [cups, setCups] = useState(0);
+  const [defeatedBosses, setDefeatedBosses] = useState([]);
+  const [showVictoryGif, setShowVictoryGif] = useState(false);
 
   const { fetchQuestion: getNextQuestion, aiLoading } = useAIQuestion(targetBoss, gameMode, currentLevel, usedQuestions, setUsedQuestions);
 
@@ -66,17 +72,33 @@ export default function App() {
     setIsShopOpen(false);
     setShowTopicSelector(false);
     setShowSolution(false);
+    setBoughtHint(false);
     setShowHomeConfirm(false);
     setInputCode("");
     setBossStep(0);
   };
 
-  const fetchQuestion = async (isBoss = false, forcedTopic = null) => {
+  const fetchQuestion = async (isBoss = false, stage = null, forcedTopic = null) => {
     setAttempts(0);
     setShowSolution(false);
     setInputCode("");
-    const nextQ = await getNextQuestion(isBoss, bossStep, forcedTopic);
+    
+    const currentStep = stage !== null ? stage : bossStep;
+    const nextQ = await getNextQuestion(isBoss, currentStep, forcedTopic);
     setQuestion(nextQ);
+
+    // Cambiar visual del oponente en ronda de jefe
+    if (isBoss) {
+      if (currentStep < 3) {
+        const cat = currentStep === 2 ? 'intermedio' : 'basico';
+        const filtered = LORE_CHARACTERS.filter(c => c.category === cat);
+        const minion = filtered[Math.floor(Math.random() * filtered.length)];
+        const rank = currentStep === 2 ? 'COMANDANTE' : 'GUARDIÁN';
+        setOpponent({ ...minion, name: `${rank} DE ${targetBoss.name}` });
+      } else {
+        setOpponent(targetBoss);
+      }
+    }
   };
 
   const startFight = (level, mode, boss = null) => {
@@ -84,14 +106,18 @@ export default function App() {
     setGameMode(mode);
     setCurrentLevel(level);
     setTargetBoss(selectedBoss);
-    setEnemyHp(level === 2 ? 250 : 100);
+    setEnemyHp(level === 2 ? 300 : 100);
     setBossStep(0);
     setPlayerHp(level === 0 ? 100 : playerHp); 
     setHasShield(false);
+    setBoughtHint(false);
     
     let char;
     if (level === 2) {
-      char = selectedBoss;
+      // Empezar con un esbirro visual
+      const filtered = LORE_CHARACTERS.filter(c => c.category === 'basico');
+      const minion = filtered[Math.floor(Math.random() * filtered.length)];
+      char = { ...minion, name: `GUARDIÁN DE ${selectedBoss.name}` };
     } else {
       const cat = level === 0 ? 'basico' : 'intermedio';
       const filtered = LORE_CHARACTERS.filter(c => c.category === cat);
@@ -139,34 +165,52 @@ export default function App() {
 
     if (isCorrect) {
       const damage = question.type === 'code' ? 300 : (question.damage || 40);
+      const potentialHp = enemyHp - damage;
+      // Si es un jefe y no es el paso de la Fatality, dejarlo mínimo en 1 HP
+      const finalHp = (currentLevel === 2 && bossStep < 3) ? Math.max(1, potentialHp) : Math.max(0, potentialHp);
+
       setAnimating('player-attack');
-      setEnemyHp(prev => Math.max(0, prev - damage));
+      setEnemyHp(finalHp);
       setComboCount(prev => prev + 1);
       setBits(prev => prev + 50);
-      setFeedback(question.type === 'code' ? "¡SUPREME FATALITY!" : "¡ULTRA COMBO!");
+      setFeedback(question.type === 'code' ? "FATALITY_IMAGE" : "¡ULTRA COMBO!");
       
       if (question.type === 'code') {
         audioManager.playSFX(SOUNDS.ULTRA_COMBO, 0.6);
+        audioManager.playSFX(SOUNDS.FATALITY, 0.8, 500);
       } else {
-        audioManager.playSFX(SOUNDS.HIT, 0.4);
-        if (comboCount === 2) { // El tercer golpe consecutivo (0->1, 1->2, 2->3)
+        // Sonido base o sonido especial para el Developer
+        if (selectedPlayer?.id === 'dev') {
+          audioManager.playSFX(SOUNDS.DEV_ATTACK, 0.5);
+        } else if (selectedPlayer?.id === 'pikachu') {
+          audioManager.playSFX(SOUNDS.PIKACHU_SPECIAL, 0.5);
+        } else if (selectedPlayer?.id === 'tralalero') {
+          audioManager.playSFX(SOUNDS.TRALALERO_ATTACK, 0.8);
+        } else {
+          audioManager.playSFX(SOUNDS.HIT, 0.4);
+        }
+
+        if (comboCount === 2) { 
           audioManager.playSFX(SOUNDS.FIGHTING_COMBO, 0.5, 500);
         }
-         if (comboCount === 4) { // El 5 golpe consecutivo (0->1, 1->2, 2->3)
+        if (comboCount === 4) {
           audioManager.playSFX(SOUNDS.FIGHTING_COMBO_FIVE_HITS, 0.5, 500);
         }
       }
 
+      let nextStep = bossStep;
       if (currentLevel === 2) {
-        setBossStep(prev => prev + 1);
+        nextStep = bossStep + 1;
+        setBossStep(nextStep);
       }
 
+      const attackDuration = selectedPlayer?.id === 'tralalero' ? 6000 : 1000;
       setTimeout(() => {
         setAnimating(null);
-        if (enemyHp > damage) {
-            fetchQuestion(currentLevel === 2);
+        if (finalHp > 0) {
+            fetchQuestion(currentLevel === 2, nextStep);
         }
-      }, 1000);
+      }, attackDuration);
     } else {
       if (hasShield) {
         setHasShield(false);
@@ -211,6 +255,12 @@ export default function App() {
     } else if (targetBoss.logicType === 'fibonacci') {
       const isFib = (clean.includes("for") || clean.includes("while")) && clean.includes("+") && (clean.includes("50") || clean.includes("length"));
       handleAttack(isFib);
+    } else if (targetBoss.logicType === 'primo') {
+      const isPrimo = clean.includes("for") && clean.includes("%") && clean.includes("if") && (clean.includes("100") || clean.includes("<="));
+      handleAttack(isPrimo);
+    } else if (targetBoss.logicType === 'poligono') {
+      const isPoly = clean.includes("function") && (clean.includes("triangulo") || clean.includes("cuadrado") || clean.includes("rectangulo")) && clean.includes("*");
+      handleAttack(isPoly);
     }
   };
 
@@ -222,8 +272,17 @@ export default function App() {
             setQuestion(null); 
         }
         else {
+          // Si es jefe, dar 10 copas y marcar como derrotado
+          if (currentLevel === 2) {
+            setCups(prev => prev + 10);
+            setDefeatedBosses(prev => [...new Set([...prev, opponent.id])]);
+            setShowVictoryGif(true);
+          }
           setGameState('won');
-          setTimeout(() => resetGame(), 5000);
+          setTimeout(() => {
+            setShowVictoryGif(false);
+            resetGame();
+          }, 6000);
         }
       }, 1000);
     }
@@ -236,6 +295,19 @@ export default function App() {
       <StartScreen 
         onStartArcade={() => { setGameMode('arcade'); setGameState('boss-selection'); }}
         onStartIA={() => { setGameMode('ia'); setGameState('boss-selection'); }}
+        onSelectPlayer={() => setGameState('character-selection')}
+        selectedPlayer={selectedPlayer}
+      />
+    );
+  }
+
+  if (gameState === 'character-selection') {
+    return (
+      <CharacterSelection 
+        onBack={() => setGameState('start')}
+        selectedId={selectedPlayer?.id}
+        onSelectCharacter={(char) => { setSelectedPlayer(char); setGameState('start'); }}
+        cups={cups}
       />
     );
   }
@@ -246,12 +318,14 @@ export default function App() {
         gameMode={gameMode}
         onBack={() => resetGame('start')}
         onSelectBoss={(boss) => startFight(0, gameMode, boss)}
+        defeatedBosses={defeatedBosses}
+        cups={cups}
       />
     );
   }
 
   if (gameState === 'won' || gameState === 'lost') {
-    return <OutcomeScreen gameState={gameState} onReset={() => resetGame('start')} />;
+    return <OutcomeScreen gameState={gameState} onReset={() => resetGame('start')} isBoss={currentLevel === 2} />;
   }
 
   return (
@@ -283,6 +357,9 @@ export default function App() {
           hasShield={hasShield}
           onBuyRepair={() => { if(bits >= 100) { setBits(b => b-100); setPlayerHp(100); }}}
           onBuyShield={() => { if(bits >= 150) { setBits(b => b-150); setHasShield(true); }}}
+          onBuyHint={() => { if(bits >= 250) { setBits(b => b-250); setBoughtHint(true); }}}
+          hintBought={boughtHint}
+          currentHint={targetBoss?.partialFatalityHint}
           onClose={() => { if(question) setIsShopOpen(false); else { setIsShopOpen(false); startFight(currentLevel + 1, gameMode); } }}
           canProceed={!question}
         />
@@ -310,7 +387,9 @@ export default function App() {
       <CombatArena 
         animating={animating}
         opponent={opponent}
+        player={selectedPlayer}
         feedback={feedback}
+        showVictoryGif={showVictoryGif}
       />
 
       {/* CONTROL AREA RESPONSIVO */}

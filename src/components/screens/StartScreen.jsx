@@ -1,11 +1,26 @@
 import React from 'react';
 import { Bot } from 'lucide-react';
 
-const StartScreen = ({ onStartArcade, onStartIA }) => {
+const StartScreen = ({ onStartArcade, onStartIA, onSelectPlayer, selectedPlayer }) => {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 md:p-6 font-mono border-[10px] md:border-[15px] border-blue-900 border-double text-center overflow-hidden">
       <h1 className="text-5xl sm:text-7xl md:text-9xl font-black text-white italic tracking-tighter mb-2 drop-shadow-[4px_4px_0px_#1e40af] md:drop-shadow-[8px_8px_0px_#1e40af]">CODE INSTINCT</h1>
-      <div className="bg-red-600 text-white px-6 md:px-10 py-2 text-lg md:text-2xl font-black mb-12 md:mb-16 skew-x-[-15deg] uppercase">Ultimate Arcade Edition</div>
+      <div className="bg-red-600 text-white px-6 md:px-10 py-2 text-lg md:text-2xl font-black mb-6 md:mb-8 skew-x-[-15deg] uppercase">Ultimate Arcade Edition</div>
+      
+      {selectedPlayer && (
+        <div className="mb-4 md:mb-8 flex flex-col items-center cursor-pointer group relative" onClick={onSelectPlayer}>
+          <div className="absolute inset-0 bg-blue-600/20 blur-3xl rounded-full scale-150 group-hover:bg-blue-600/40 transition-colors"></div>
+          <img 
+            src={selectedPlayer.image} 
+            alt={selectedPlayer.name} 
+            className={`w-24 h-24 md:w-40 md:h-40 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(37,99,235,0.5)] ${selectedPlayer.shouldFlip ? '-scale-x-100' : ''} group-hover:scale-110 transition-transform`} 
+          />
+          <div className="relative z-10 mt-2 px-4 py-1 bg-blue-600/20 border border-blue-500/50 rounded-full backdrop-blur-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+            <span className="text-blue-400 group-hover:text-white font-black italic uppercase text-[10px] md:text-xs">HERO: {selectedPlayer.name} (CHANGE)</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row gap-4 md:gap-8 w-full max-w-sm md:max-w-none px-4">
         <button 
           onClick={onStartArcade} 

@@ -9,7 +9,11 @@ export const SOUNDS = {
   VICTORY: '/music/Voicy_Supreme victory.mp3',
   ULTRA_COMBO: '/music/Voicy_Ultra combooooo.mp3',
   FIGHTING_COMBO: '/music/Voicy_Fighting sound effect.mp3',
-  FIGHTING_COMBO_FIVE_HITS: '/music/Voicy_Blaster Combo .mp3'
+  FIGHTING_COMBO_FIVE_HITS: '/music/Voicy_Blaster Combo .mp3',
+  DEV_ATTACK: '/music/Voicy_playinclass.mp3',
+  PIKACHU_SPECIAL: '/music/pikachu-thunder.mp3',
+  FATALITY: '/music/Voicy_Fatality.mp3',
+  TRALALERO_ATTACK: '/music/Voicy_tralalero tralala.mp3'
 };
 
 class AudioManager {
