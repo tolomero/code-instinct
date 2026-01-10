@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles } from 'lucide-react';
+import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles, Target, Coins } from 'lucide-react';
 import { usePokemonGame } from '../../hooks/usePokemonGame';
 import { audioManager, SOUNDS } from '../../utils/audio';
 
@@ -41,23 +41,20 @@ const PokemonBattleArena = ({
   const [overlayGif, setOverlayGif] = useState(null);
   const prevStageRef = useRef(evolutionStage);
 
-  // Attack Names per Stage
   const GET_ATTACK_NAMES = (stage, type = 'normal') => {
      const t = type.toUpperCase();
-     if (stage === 0) return ["ATAQUE NORMAL", "ATAQUE MEDIO", "FINAL TOTAL"];
-     if (stage === 1) return ["GOLPE CERTERO", "IMPACTO FUERTE", `MEGA ${t} BLAST`];
-     return ["FURIA ELEMENTAL", "VÓRTICE FINAL", `APOCALIPSIS ${t}`];
+     if (stage === 0) return ["ATAQUE RAPIDO", "SUPER GOLPE", "PODER TOTAL"];
+     if (stage === 1) return ["ATAQUE FURIA", "BOLA DE ENERGÍA", `EXPLOSIÓN ${t}`];
+     return ["TORMENTA ELEMENTAL", "VÓRTICE MÁXIMO", `APOCALIPSIS ${t}`];
   };
 
   const attackNames = GET_ATTACK_NAMES(evolutionStage, playerPokemon.type);
 
-  // Watch for Evolution to play cry and GIF
   useEffect(() => {
     if (evolutionStage > prevStageRef.current) {
        const cry = GET_CRY(playerForm.name);
        if (cry) audioManager.playSFX(cry, 0.7);
 
-       // Special Evolution GIF for Charizard
        if (playerForm.name === 'charizard' || playerForm.name === 'charizard-mega-x') {
          setOverlayGif('https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cHhwcGM0bmc2c3Y3dm1rNmI0Mnd6dGFscDRjOHFkbzBnNTBscnRveSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/cNlhpWYx5PGsOGXAil/giphy.gif');
          setTimeout(() => setOverlayGif(null), 3000);
@@ -67,73 +64,67 @@ const PokemonBattleArena = ({
   }, [evolutionStage, playerForm.name]);
 
   function GET_CRY(name) {
-    if (name === 'charmander') return SOUNDS.CRY_CHARMANDER;
-    if (name === 'charmeleon') return SOUNDS.CRY_CHARMELEON;
-    if (name === 'charizard' || name === 'charizard-mega-x') return SOUNDS.CRY_CHARIZARD;
-    if (name === 'pikachu') return SOUNDS.CRY_PIKACHU;
-    return null;
+    const cries = {
+      charmander: SOUNDS.CRY_CHARMANDER,
+      charmeleon: SOUNDS.CRY_CHARMELEON,
+      charizard: SOUNDS.CRY_CHARIZARD,
+      'charizard-mega-x': SOUNDS.CRY_CHARIZARD,
+      pikachu: SOUNDS.CRY_PIKACHU
+    };
+    return cries[name] || null;
   }
 
-  // Visual effects on attack
   useEffect(() => {
     if (gameState.lastAction === 'correct') {
       setAnimating('player-attack-hit');
-      setFeedback('¡ATAQUE!');
-      
+      setFeedback('¡GENIAL!');
       const cry = GET_CRY(playerForm.name);
       if (cry) audioManager.playSFX(cry, 0.6);
       else audioManager.playSFX(SOUNDS.HIT, 0.4); 
-
       setTimeout(() => { setAnimating(null); setFeedback(null); }, 600);
     } else if (gameState.lastAction === 'wrong') {
       setAnimating('enemy-attack-hit');
-      setFeedback('¡FALLASTE!');
+      setFeedback('¡OUCH!');
       const type = enemyPokemon.types?.[0]?.type?.name || 'normal';
       audioManager.playSFX(TYPE_SOUNDS[type] || SOUNDS.DAMAGE, 0.6);
       setTimeout(() => { setAnimating(null); setFeedback(null); }, 1000);
     } else if (gameState.lastAction === 'boss-special') {
       setAnimating('boss-special-hit');
-      setFeedback('¡ATAQUE JEFE!');
+      setFeedback('¡CUIDADO!');
       setScreenEffect('shake-red');
       audioManager.playSFX(SOUNDS.FATALITY, 0.6);
       setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, 1500);
     } else if (gameState.lastAction === 'small-attack' || gameState.lastAction === 'medium-attack') {
       const isMedium = gameState.lastAction === 'medium-attack';
       setAnimating(isMedium ? 'player-md-atk' : 'player-sm-atk');
-      setFeedback(attackNames[isMedium ? 1 : 0]);
+      setFeedback('¡SÚPER!');
       if (isMedium) setScreenEffect('flash-white');
-      
       const cry = GET_CRY(playerForm.name);
       if (cry) audioManager.playSFX(cry, isMedium ? 0.8 : 0.7);
       else audioManager.playSFX(isMedium ? SOUNDS.ULTRA_COMBO : SOUNDS.HIT, 0.6);
 
-      // Special GIFs for Charmander/Charmeleon/Charizard only on energy attacks
       if (playerForm.name === 'charizard' || playerForm.name === 'charizard-mega-x') {
         setOverlayGif('https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3dXQzOXhiaXd5bnliNmt5ZG96cmEwZXVvbmk2MWh5YW9iNnltYzI2aSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/48cVVAf9vam9W/giphy.gif');
       } else if (playerForm.name === 'charmander' || playerForm.name === 'charmeleon') {
         setOverlayGif('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcmlpMXp6dTJhOG5iZjZ1NjEzOXkyaGI3M2ppNmVqNWIyZWVhZDM0eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WJ7Tr9wi8xVe0/giphy.gif');
       }
-      setTimeout(() => setOverlayGif(null), isMedium ? 2000 : 1500);
-
-      setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, isMedium ? 1200 : 1000);
+      setTimeout(() => setOverlayGif(null), isMedium ? 4000 : 3500);
+      setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, isMedium ? 3000 : 2500);
     } else if (gameState.lastAction === 'final-attack') {
       setAnimating('player-final-atk');
-      setFeedback(attackNames[2]);
+      setFeedback('¡ÉPICO!');
       setScreenEffect('epic-shake');
-
       const cry = GET_CRY(playerForm.name);
       if (cry) audioManager.playSFX(cry, 1.0);
       else audioManager.playSFX(SOUNDS.FATALITY, 0.8);
 
-      // Final Attack GIF for the line
       if (['charmander', 'charmeleon', 'charizard', 'charizard-mega-x'].includes(playerForm.name)) {
         setOverlayGif('https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cHhwcGM0bmc2c3Y3dm1rNmI0Mnd6dGFscDRjOHFkbzBnNTBscnRveSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/kRgzY3qVnkEa2lIAxf/giphy.gif');
-        setTimeout(() => setOverlayGif(null), 3000);
+        setTimeout(() => setOverlayGif(null), 5500);
       }
-
-      setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, 2000);
+      setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, 4000);
     } else if (gameState.lastAction === 'victory') {
-      setFeedback('¡VICTORIA!');
+      setFeedback('¡GANASTE!');
       audioManager.playSFX(SOUNDS.VICTORY, 0.6);
     }
   }, [gameState.lastAction, gameState.turn, attackNames, playerForm.name]);
@@ -151,80 +142,92 @@ const PokemonBattleArena = ({
   const handleTriggerSpecial = (level) => {
     const costs = { 1: 2, 2: 3, 3: 5 };
     if (gameState.energy < costs[level]) return;
-    
     const type = playerPokemon.type || 'normal';
     audioManager.playSFX(TYPE_SOUNDS[type] || SOUNDS.HIT, 0.5);
-
     useSpecialAttack(level);
   };
 
   if (!enemyPokemon) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white z-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-        <h2 className="text-2xl font-bold animate-pulse uppercase tracking-widest">Buscando Rival...</h2>
+      <div className="min-h-screen bg-sky-500 flex flex-col items-center justify-center text-white z-50 p-6">
+        <div className="animate-bounce mb-8">
+           <img src="https://img.pokemondb.net/sprites/items/poke-ball.png" className="w-16 h-16" alt="loading" />
+        </div>
+        <h2 className="text-3xl font-black uppercase tracking-widest text-center drop-shadow-lg">¡BUSCANDO RIVAL!</h2>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen bg-slate-950 font-mono relative overflow-hidden flex flex-col select-none ${screenEffect === 'shake-red' ? 'animate-shake-red' : ''} ${screenEffect === 'epic-shake' ? 'animate-epic-shake' : ''}`}>
+    <div className={`h-screen bg-indigo-900 font-sans relative overflow-hidden flex flex-col select-none ${screenEffect === 'shake-red' ? 'animate-shake-red' : ''} ${screenEffect === 'epic-shake' ? 'animate-epic-shake' : ''}`}>
       
-      {/* Dynamic Background */}
-      <div className={`absolute inset-0 bg-cover bg-center opacity-40 transition-all duration-1000 ${enemyPokemon.isBoss ? 'hue-rotate-180 brightness-50' : ''}`} style={{ backgroundImage: "url('https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg')" }}></div>
-      <div className={`absolute inset-0 bg-white transition-opacity duration-300 pointer-events-none ${screenEffect === 'flash-white' ? 'opacity-50' : 'opacity-0'}`}></div>
+      {/* Background - Soft Blue Gradient instead of just dark */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 to-indigo-900 opacity-60 transition-all duration-1000"></div>
+      <div className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay" style={{ backgroundImage: "url('https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg')" }}></div>
+      <div className={`absolute inset-0 bg-white transition-opacity duration-300 pointer-events-none ${screenEffect === 'flash-white' ? 'opacity-60' : 'opacity-0'}`}></div>
 
       {/* Special Overlay GIF */}
       {overlayGif && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-500">
-           <img src={overlayGif} className="max-w-[90%] max-h-[80%] object-contain rounded-3xl border-4 border-white/20 shadow-2xl shadow-blue-500/20" alt="Special Move" />
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-indigo-950/80 backdrop-blur-md animate-in fade-in duration-500">
+           <img src={overlayGif} className="max-w-[85%] max-h-[75%] object-contain rounded-[3rem] border-4 border-white/40 shadow-[0_0_50px_rgba(255,255,255,0.3)]" alt="Special Move" />
         </div>
       )}
 
-      {/* Header */}
-      <div className="relative z-20 flex justify-between items-start p-4 md:p-6">
-        <button onClick={onBack} className="bg-slate-800/80 p-3 rounded-full hover:bg-red-600 transition-all border border-slate-600 shadow-lg group">
-          <Home className="text-white group-hover:scale-110" size={24} />
+      {/* HEADER DIVERTIDO */}
+      <div className="relative z-20 flex justify-between items-center p-3 md:p-5 bg-white/10 backdrop-blur-xl border-b-2 border-white/20 shrink-0">
+        <button onClick={onBack} className="bg-rose-500 p-2.5 rounded-2xl hover:bg-rose-400 transition-all shadow-[0_5px_0_rgb(159,18,57)] active:shadow-none active:translate-y-[5px]">
+          <Home className="text-white" size={24} />
         </button>
 
-        <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center gap-3 bg-slate-900/90 px-6 py-2 rounded-full border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                <Trophy size={24} className="text-yellow-400" />
-                <span className="text-yellow-400 font-black text-2xl tracking-tighter">BATTLE {gameState.battlesWon + 1}/10</span>
+        <div className="flex flex-col items-center">
+            <div className="flex items-center gap-2 bg-yellow-400 px-5 py-1.5 rounded-2xl border-4 border-yellow-600 shadow-lg">
+                <Trophy size={20} className="text-yellow-800" fill="currentColor" />
+                <span className="text-yellow-900 font-black text-lg md:text-2xl italic tracking-tighter uppercase whitespace-nowrap">NIVEL {gameState.battlesWon + 1}</span>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="bg-slate-900/90 px-4 py-1 rounded-full border border-blue-400">
-                <span className="text-blue-400 font-bold text-sm">BITS: {bits}</span>
-              </div>
-              <div className="bg-slate-900/90 px-4 py-1 rounded-full border border-purple-400">
-                <span className="text-purple-400 font-bold text-sm">PWR: x{gameState.damageMultiplier.toFixed(1)}</span>
-              </div>
+            <div className="flex gap-4 mt-2">
+               <div className="flex items-center gap-1 bg-sky-500/80 px-3 py-1 rounded-full border-2 border-sky-300 shadow-sm">
+                  <Coins size={14} className="text-yellow-300" />
+                  <span className="text-white font-black text-xs md:text-sm tracking-widest">{bits}</span>
+               </div>
+               <div className="flex items-center gap-1 bg-purple-500/80 px-3 py-1 rounded-full border-2 border-purple-300 shadow-sm">
+                  <Star size={14} className="text-yellow-200" fill="currentColor" />
+                  <span className="text-white font-black text-xs md:text-sm tracking-widest">x{gameState.damageMultiplier.toFixed(1)}</span>
+               </div>
             </div>
         </div>
 
-        <div className="w-24"></div>
+        <div className="w-12"></div>
       </div>
 
-      <div className="flex-1 relative flex items-end justify-around pb-24 px-4 z-10">
-        <div className="relative flex flex-col items-center group">
-           <div className="mb-4 bg-slate-900/95 p-3 rounded-xl border-2 border-blue-500/50 w-44 shadow-2xl transform -skew-x-12 animate-float">
-              <div className="flex justify-between items-center mb-1 skew-x-12">
-                <span className="text-blue-300 font-black uppercase text-[10px] italic">{playerForm.display}</span>
-                <span className="text-white font-bold text-[10px]">{gameState.playerHp}/100</span>
+      {/* BATTLE STAGE */}
+      <div className="flex-1 min-h-0 relative flex flex-row justify-around items-center px-2 md:px-8 py-4 overflow-hidden">
+        
+        {/* Player Container */}
+        <div className="relative flex flex-col items-center group z-10 transition-transform duration-500">
+           {/* HP BAR PLAYER - Bubbly Style */}
+           <div className="mb-4 bg-white p-2 md:p-3 rounded-3xl border-4 border-blue-600 w-36 md:w-64 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-1 opacity-10">
+                 <Shield size={32} />
               </div>
-              <div className="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-700 skew-x-12">
-                <div className={`h-full transition-all duration-700 ${gameState.playerHp < 30 ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`} style={{ width: `${gameState.playerHp}%` }}></div>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-blue-600 font-black uppercase text-[10px] md:text-sm italic truncate w-16 md:w-auto tracking-tight">{playerForm.display}</span>
+                <span className="text-blue-800 font-black text-[10px] md:text-sm">{gameState.playerHp} HP</span>
+              </div>
+              <div className="w-full bg-slate-200 h-4 md:h-6 rounded-full overflow-hidden border-2 border-slate-300 shadow-inner">
+                <div className={`h-full transition-all duration-700 rounded-full ${gameState.playerHp < 30 ? 'bg-rose-500 animate-pulse' : 'bg-blue-500'}`} style={{ width: `${gameState.playerHp}%` }}>
+                   <div className="w-full h-1/2 bg-white/30 rounded-full"></div>
+                </div>
               </div>
            </div>
 
-           <div className="absolute -left-20 bottom-20 flex flex-col-reverse gap-2">
+           {/* Energy Orbs - More colorful */}
+           <div className="absolute -left-5 md:-left-24 bottom-10 md:bottom-20 flex flex-col-reverse gap-1.5 md:gap-3">
              {[...Array(10)].map((_, i) => (
                 <div 
                   key={i} 
-                  className={`w-7 h-7 rounded-full border-2 border-black transition-all duration-300 ${i < gameState.energy ? 'bg-blue-400 shadow-[0_0_15px_#60a5fa] scale-110 z-10' : 'bg-slate-900/50 scale-90'}`}
+                  className={`w-4 h-4 md:w-8 md:h-8 rounded-full border-2 border-white/20 transition-all duration-300 transform ${i < gameState.energy ? 'bg-yellow-400 shadow-[0_0_15px_#fbbf24] scale-110 rotate-12' : 'bg-white/10'}`}
                 >
-                  {i < gameState.energy && <Zap size={14} className="text-white m-1" fill="currentColor" />}
+                  {i < gameState.energy && <Zap size={10} className="text-white m-auto md:mt-1.5 animate-pulse" fill="currentColor" />}
                 </div>
              ))}
            </div>
@@ -233,179 +236,198 @@ const PokemonBattleArena = ({
              src={playerForm.image} 
              alt={playerForm.name}
              className={`
-               w-48 h-48 md:w-72 md:h-72 object-contain transition-all duration-300
+               w-32 h-32 md:w-80 md:h-80 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)]
+               transition-all duration-300
                ${playerForm.shouldFlip ? '-scale-x-100' : ''}
-               ${animating === 'player-attack-hit' ? 'translate-x-32 scale-110 -rotate-12' : ''}
-               ${animating === 'player-sm-atk' ? 'translate-x-40 scale-125 brightness-125' : ''}
-               ${animating === 'player-md-atk' ? 'translate-x-60 scale-150 brightness-150 rotate-12' : ''}
-               ${animating === 'player-final-atk' ? 'translate-x-96 scale-[2.5] brightness-[2] drop-shadow-[0_0_60px_white]' : ''}
-               ${animating === 'enemy-attack-hit' || animating === 'boss-special-hit' ? 'opacity-50 grayscale animate-shake' : ''}
+               ${animating === 'player-attack-hit' ? 'translate-x-20 md:translate-x-40 scale-125' : ''}
+               ${animating === 'player-sm-atk' ? 'translate-x-24 md:translate-x-40 scale-125 rotate-6' : ''}
+               ${animating === 'player-md-atk' ? 'translate-x-32 md:translate-x-60 scale-150 -rotate-6' : ''}
+               ${animating === 'player-final-atk' ? 'translate-x-48 md:translate-x-96 scale-[2.2] brightness-[1.2]' : ''}
+               ${animating === 'enemy-attack-hit' || animating === 'boss-special-hit' ? 'opacity-50 blur-[2px] animate-shake translate-y-4' : ''}
              `}
            />
         </div>
 
+        {/* FEEDBACK OVERLAY */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-40">
            {feedback && (
              <h2 className={`
-                text-6xl md:text-9xl font-black uppercase italic tracking-tighter text-center
+                text-5xl md:text-9xl font-black uppercase italic tracking-tighter text-center scale-150
                 ${animating?.includes('final') ? 'text-white animate-final-text' : 'text-yellow-400 animate-bounce-in'}
-                drop-shadow-[0_10px_0_#000]
+                drop-shadow-[0_8px_0_#92400e] text-stroke-small md:text-stroke-large
              `}>
                {feedback}
              </h2>
            )}
         </div>
 
-        <div className="relative flex flex-col items-center">
-           <div className="mb-4 bg-slate-900/95 p-3 rounded-xl border-2 border-red-500/50 w-56 shadow-2xl transform skew-x-12 animate-float">
-              <div className="flex justify-between items-center mb-1 -skew-x-12">
-                <span className="text-red-400 font-black uppercase text-[11px] italic truncate w-32">{enemyPokemon.name}</span>
-                <span className="text-white font-bold text-[10px]">{gameState.enemyHp}/{gameState.maxEnemyHp}</span>
+        {/* Enemy Container */}
+        <div className="relative flex flex-col items-center z-10 transition-transform duration-500">
+           {/* HP BAR ENEMY - Bubbly Style */}
+           <div className="mb-4 bg-white p-2 md:p-3 rounded-3xl border-4 border-rose-600 w-36 md:w-64 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 p-1 opacity-10">
+                 <Swords size={32} />
               </div>
-              <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700 -skew-x-12">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-rose-600 font-black uppercase text-[10px] md:text-sm italic truncate w-16 md:w-auto tracking-tight">{enemyPokemon.name}</span>
+                <span className="text-rose-800 font-black text-[10px] md:text-sm">{gameState.enemyHp} HP</span>
+              </div>
+              <div className="w-full bg-slate-200 h-4 md:h-6 rounded-full overflow-hidden border-2 border-slate-300 shadow-inner">
                 <div 
-                   className={`h-full transition-all duration-700 ${enemyPokemon.isBoss ? 'bg-purple-600 shadow-[0_0_10px_purple]' : 'bg-red-500 shadow-[0_0_10px_red]'}`} 
+                   className={`h-full transition-all duration-700 rounded-full ${enemyPokemon.isBoss ? 'bg-purple-600 shadow-[0_0_15px_purple]' : 'bg-rose-500'}`} 
                    style={{ width: `${(gameState.enemyHp / gameState.maxEnemyHp) * 100}%` }}
-                ></div>
+                >
+                   <div className="w-full h-1/2 bg-white/30 rounded-full"></div>
+                </div>
               </div>
            </div>
 
            <img 
-             src={enemyPokemon.sprites?.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemyPokemon.id}.png`}
+             src={enemyPokemon.sprites?.other?.home?.front_default || enemyPokemon.sprites?.other?.['official-artwork']?.front_default || enemyPokemon.sprites?.front_default}
              alt={enemyPokemon.name}
              className={`
-               w-56 h-56 md:w-96 md:h-96 object-contain transition-all duration-300
-               ${animating === 'enemy-attack-hit' ? '-translate-x-40 scale-110 rotate-12' : ''}
-               ${animating === 'boss-special-hit' ? '-translate-x-60 scale-150 brightness-150 -rotate-12' : ''}
-               ${animating?.includes('player') ? 'opacity-50 grayscale animate-shake' : ''}
-               ${enemyPokemon.isBoss ? 'drop-shadow-[0_0_40px_rgba(168,85,247,0.7)]' : 'drop-shadow-[0_0_20px_black]'}
+               w-32 h-32 md:w-80 md:h-80 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)]
+               transition-all duration-300
+               ${animating === 'enemy-attack-hit' ? '-translate-x-20 md:-translate-x-40 scale-125' : ''}
+               ${animating === 'boss-special-hit' ? '-translate-x-32 md:-translate-x-60 scale-150 brightness-125 rotate-12' : ''}
+               ${animating?.includes('player') ? 'opacity-50 blur-[2px] animate-shake translate-y-4' : ''}
+               ${enemyPokemon.isBoss ? 'drop-shadow-[0_0_40px_rgba(168,85,247,0.7)]' : ''}
              `}
            />
            {enemyPokemon.isBoss && (
-             <div className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gradient-to-r from-red-600 to-purple-600 px-4 py-1 rounded shadow-lg animate-pulse">
+             <div className="absolute -top-6 md:-top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-1.5 rounded-2xl border-2 border-white shadow-xl animate-pulse whitespace-nowrap z-20 scale-110 md:scale-125">
                 <Star size={16} fill="white" className="text-white" />
-                <span className="text-white font-black text-xs italic tracking-widest uppercase">BOSS LEGENDARY</span>
+                <span className="text-white font-black text-[10px] md:text-sm italic tracking-widest uppercase">¡JEFE LEGENDARIO!</span>
                 <Star size={16} fill="white" className="text-white" />
              </div>
            )}
         </div>
       </div>
 
-      <div className="relative z-30 bg-black/95 border-t-4 border-slate-800 p-4 md:p-8 flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/3 flex flex-col gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50">
-           <div className="flex flex-col gap-2">
-             <h4 className="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1 flex items-center gap-2"><Sparkles size={12}/> Tienda de Combate</h4>
-             <div className="grid grid-cols-2 gap-2">
-                <button onClick={handleBuyHealth} className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white p-3 rounded-xl border border-emerald-600/50 flex flex-col items-center gap-1 transition-all group active:scale-90">
-                   <Heart size={20} className="group-hover:animate-bounce" />
-                   <span className="text-[10px] font-black italic">+60 HP (50b)</span>
-                </button>
-                <button onClick={handleBuyDamage} className="bg-orange-600/20 hover:bg-orange-600 text-orange-400 hover:text-white p-3 rounded-xl border border-orange-600/50 flex flex-col items-center gap-1 transition-all group active:scale-90">
-                   <Swords size={20} className="group-hover:scale-110" />
-                   <span className="text-[10px] font-black italic">PWR x1.3 (100b)</span>
-                </button>
-             </div>
-           </div>
+      {/* OPERACIONES Y ACCIONES - Mas colorido y amigable */}
+      <div className="relative z-30 bg-white/95 border-t-4 border-indigo-200 p-4 md:p-8 flex flex-col md:flex-row gap-6 md:gap-10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
+        
+        {/* Menu de Acciones */}
+        <div className="w-full md:w-1/3 flex flex-col gap-4">
+           
+           <div className="flex md:flex-col gap-3 overflow-x-auto no-scrollbar md:h-full">
+              {/* TIENDA */}
+              <div className="shrink-0 md:w-full bg-sky-50 p-3 rounded-3xl border-2 border-sky-200">
+                <h4 className="text-sky-600 font-black text-[10px] md:text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                   <Target size={14}/> TIENDA DE AYUDA
+                </h4>
+                <div className="flex md:grid md:grid-cols-2 gap-2">
+                   <button onClick={handleBuyHealth} className="bg-emerald-400 hover:bg-emerald-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-emerald-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
+                      <Heart size={20} fill="currentColor" />
+                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">+60 HP (50)</span>
+                   </button>
+                   <button onClick={handleBuyDamage} className="bg-orange-400 hover:bg-orange-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-orange-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
+                      <Swords size={20} fill="currentColor" />
+                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">MAX PW (100)</span>
+                   </button>
+                </div>
+              </div>
 
-           <div className="flex flex-col gap-2">
-             <h4 className="text-blue-500 font-bold text-xs uppercase tracking-widest mb-1 flex items-center gap-2"><Zap size={12}/> Ataques Especiales</h4>
-             <div className="flex flex-col gap-2">
-                <button 
-                  onClick={() => handleTriggerSpecial(1)} 
-                  disabled={gameState.energy < 2}
-                  className={`px-4 py-3 rounded-xl font-black italic text-sm flex justify-between items-center transition-all ${gameState.energy >= 2 ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20 cursor-pointer hover:bg-blue-500 active:scale-95' : 'bg-slate-800 text-slate-600 grayscale opacity-50'}`}
-                >
-                  <span className="truncate">{attackNames[0]}</span>
-                  <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full ml-2 shrink-0">
-                     <Zap size={12} fill="currentColor" /> <span className="text-xs">2</span>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleTriggerSpecial(2)} 
-                  disabled={gameState.energy < 3}
-                  className={`px-4 py-3 rounded-xl font-black italic text-sm flex justify-between items-center transition-all ${gameState.energy >= 3 ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg cursor-pointer hover:brightness-110 active:scale-95' : 'bg-slate-800 text-slate-600 grayscale opacity-50'}`}
-                >
-                   <span className="truncate">{attackNames[1]}</span>
-                   <div className="flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-full ml-2 shrink-0">
-                     <Zap size={12} fill="currentColor" /> <span className="text-xs">3</span>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleTriggerSpecial(3)} 
-                  disabled={gameState.energy < 5}
-                  className={`px-4 py-4 rounded-xl font-black italic text-md flex justify-between items-center transition-all group ${gameState.energy >= 5 ? 'bg-gradient-to-r from-yellow-500 via-red-500 to-purple-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)] animate-pulse cursor-pointer' : 'bg-slate-800 text-slate-600 grayscale opacity-50'}`}
-                >
-                   <span className="group-hover:tracking-widest transition-all truncate">{attackNames[2]}</span>
-                   <div className="flex items-center gap-1 bg-black/40 px-3 py-1 rounded-full border border-white/20 ml-2 shrink-0">
-                     <Zap size={14} fill="currentColor" className="text-yellow-400" /> <span className="text-sm">5</span>
-                  </div>
-                </button>
-             </div>
+              {/* ESPECIALES */}
+              <div className="shrink-0 md:w-full bg-purple-50 p-3 rounded-3xl border-2 border-purple-200">
+                <h4 className="text-purple-600 font-black text-[10px] md:text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+                   <Zap size={14}/> PODERES ESPECIALES
+                </h4>
+                <div className="flex md:flex-col gap-2">
+                   <button onClick={() => handleTriggerSpecial(1)} disabled={gameState.energy < 2} className={`md:w-full py-2 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 2 ? 'bg-indigo-500 text-white border-indigo-700 hover:bg-indigo-400 active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                      <span className="text-xs font-black truncate">{attackNames[0]}</span>
+                      <span className="text-[10px] bg-black/20 px-2 rounded-full ml-2">2 <Zap size={8} className="inline mb-0.5" /></span>
+                   </button>
+                   <button onClick={() => handleTriggerSpecial(2)} disabled={gameState.energy < 3} className={`md:w-full py-2 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 3 ? 'bg-purple-500 text-white border-purple-700 hover:bg-purple-400 active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                      <span className="text-xs font-black truncate">{attackNames[1]}</span>
+                      <span className="text-[10px] bg-black/20 px-2 rounded-full ml-2">3 <Zap size={8} className="inline mb-0.5" /></span>
+                   </button>
+                   <button onClick={() => handleTriggerSpecial(3)} disabled={gameState.energy < 5} className={`md:w-full py-2.5 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 5 ? 'bg-gradient-to-r from-orange-400 to-rose-400 text-white border-red-700 animate-pulse shadow-rose-200 shadow-lg active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                      <span className="text-sm font-black italic truncate">{attackNames[2]}</span>
+                      <span className="text-[10px] bg-black/40 px-2 rounded-full border border-white/30">5 <Star size={10} className="inline mb-0.5" /></span>
+                   </button>
+                </div>
+              </div>
            </div>
         </div>
 
-        <div className="flex-1 bg-slate-900/40 rounded-2xl p-6 border border-slate-700/50 flex flex-col items-center justify-center">
-           {!currentQuestion ? (
-              <div className="text-slate-700 font-bold animate-pulse text-2xl uppercase italic">Calculando Ataque...</div>
-           ) : (
-              <>
-                 <div className="text-blue-400 font-black text-sm uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                    <span className="w-12 h-[1px] bg-blue-500/30"></span>
-                    Misión Matemática
-                    <span className="w-12 h-[1px] bg-blue-500/30"></span>
-                 </div>
-                 <h3 className="text-5xl md:text-7xl text-white font-black tracking-tight mb-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
-                   {currentQuestion.question}
-                 </h3>
-                 <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+        {/* MATH QUESTION - Very prominent and clear */}
+        <div className="flex-1 bg-sky-50 rounded-3xl p-5 md:p-10 border-4 border-sky-400 flex flex-col items-center justify-center shadow-inner">
+            {!currentQuestion ? (
+              <div className="text-sky-400 font-bold animate-pulse text-2xl uppercase tracking-[0.2em] italic">PREPARÁNDOSE...</div>
+            ) : (
+              <div className="w-full flex flex-col items-center">
+                <div className="text-indigo-400 font-black text-xs md:text-sm uppercase tracking-widest mb-4">¡RESUELVE Y ATACA!</div>
+                <h3 className="text-6xl md:text-9xl text-indigo-900 font-black mb-8 md:mb-14 drop-shadow-sm select-none">{currentQuestion.question}</h3>
+                
+                <div className="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-3xl">
                    {currentQuestion.options.map((opt, i) => (
                       <button 
                          key={i} 
                          onClick={() => submitAnswer(opt)}
-                         className="bg-slate-800 border-2 border-slate-700 hover:bg-white hover:text-black hover:border-white text-white p-5 rounded-2xl font-black text-2xl md:text-3xl transition-all active:scale-95 shadow-xl"
+                         className={`
+                            py-5 md:py-10 px-4 rounded-[2rem] font-black text-3xl md:text-6xl
+                            transition-all active:translate-y-2 active:border-b-0
+                            ${i === 0 ? 'bg-rose-400 border-b-[10px] border-rose-600 text-white hover:bg-rose-300' : ''}
+                            ${i === 1 ? 'bg-sky-400 border-b-[10px] border-sky-600 text-white hover:bg-sky-300' : ''}
+                            ${i === 2 ? 'bg-yellow-400 border-b-[10px] border-yellow-600 text-white hover:bg-yellow-300' : ''}
+                            ${i === 3 ? 'bg-purple-400 border-b-[10px] border-purple-600 text-white hover:bg-purple-300' : ''}
+                         `}
                       >
                          {opt}
                       </button>
                    ))}
-                 </div>
-              </>
-           )}
+                </div>
+              </div>
+            )}
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        
+        .font-sans { font-family: 'Fredoka One', cursive, sans-serif; }
+
         @keyframes float {
-          0%, 100% { transform: translateY(0) skewX(-12deg); }
-          50% { transform: translateY(-5px) skewX(-12deg); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
         .animate-float { animation: float 3s ease-in-out infinite; }
+        
         .animate-shake { animation: shake 0.2s ease-in-out infinite; }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
         }
+
+        .animate-shake-red { animation: shake-red 0.5s ease-in-out 3; }
         @keyframes shake-red {
           0%, 100% { transform: translate(0, 0); }
-          10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -10px); background-color: rgba(239, 68, 68, 0.1); }
+          10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -10px); background: rgba(255, 0, 0, 0.2); }
           20%, 40%, 60%, 80% { transform: translate(10px, 10px); }
         }
-        .animate-shake-red { animation: shake-red 0.5s ease-in-out 3; }
-        @keyframes epic-shake {
-          0% { transform: scale(1) translate(0,0); }
-          10% { transform: scale(1.1) translate(-20px, 10px); }
-          20% { transform: scale(1.2) translate(20px, -10px); background: white; }
-          30% { transform: scale(1.1) translate(-20px, -10px); }
-          100% { transform: scale(1) translate(0,0); }
-        }
+
         .animate-epic-shake { animation: epic-shake 1.5s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes final-text {
-          0% { transform: scale(0); opacity: 0; filter: blur(20px); }
-          50% { transform: scale(1.5); opacity: 1; filter: blur(0); text-shadow: 0 0 50px white; }
-          100% { transform: scale(1.2); }
+        @keyframes epic-shake {
+          0% { transform: scale(1); }
+          20% { transform: scale(1.1) rotate(2deg); background: white; }
+          40% { transform: scale(1.2) rotate(-2deg); }
+          100% { transform: scale(1); }
         }
-        .animate-final-text { animation: final-text 0.5s forwards; }
-        .stroke-text { -webkit-text-stroke: 4px black; }
+
+        @keyframes bounce-in {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+        .text-stroke-small { -webkit-text-stroke: 2px #4338ca; }
+        .text-stroke-large { -webkit-text-stroke: 4px #4338ca; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
   );

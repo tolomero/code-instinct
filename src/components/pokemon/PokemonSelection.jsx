@@ -9,7 +9,7 @@ const POKEMON_ROSTER = [
   { id: 150, name: "mewtwo", type: "psychic", display: "Mewtwo", evolutions: ["mewtwo", "mewtwo-mega-y", "mewtwo-mega-x"], locked: true, cost: 30 },
   { id: 384, name: "rayquaza", type: "dragon", display: "Rayquaza", evolutions: ["rayquaza", "rayquaza", "rayquaza-mega"] },
   { id: 249, name: "lugia", type: "psychic", display: "Lugia" },
-  { id: 6, name: "charizard-mega-x", type: "fire", display: "Mega Charizard X", isMega: true, shouldFlip: true },
+  { id: 6, name: "charizard-mega-x", type: "fire", display: "Mega Charizard X", isMega: true },
   { id: 9, name: "blastoise-mega", type: "water", display: "Mega Blastoise", isMega: true },
   { id: 94, name: "gengar-mega", type: "ghost", display: "Mega Gengar", isMega: true },
   { id: 151, name: "mew", type: "psychic", display: "Mew", isLegendary: true, locked: true, cost: 20 },
