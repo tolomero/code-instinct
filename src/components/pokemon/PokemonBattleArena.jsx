@@ -161,7 +161,7 @@ const PokemonBattleArena = ({
   return (
     <div className={`h-screen bg-indigo-900 font-sans relative overflow-hidden flex flex-col select-none ${screenEffect === 'shake-red' ? 'animate-shake-red' : ''} ${screenEffect === 'epic-shake' ? 'animate-epic-shake' : ''}`}>
       
-      {/* Background - Soft Blue Gradient instead of just dark */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 to-indigo-900 opacity-60 transition-all duration-1000"></div>
       <div className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay" style={{ backgroundImage: "url('https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg')" }}></div>
       <div className={`absolute inset-0 bg-white transition-opacity duration-300 pointer-events-none ${screenEffect === 'flash-white' ? 'opacity-60' : 'opacity-0'}`}></div>
@@ -173,61 +173,58 @@ const PokemonBattleArena = ({
         </div>
       )}
 
-      {/* HEADER DIVERTIDO */}
-      <div className="relative z-20 flex justify-between items-center p-3 md:p-5 bg-white/10 backdrop-blur-xl border-b-2 border-white/20 shrink-0">
-        <button onClick={onBack} className="bg-rose-500 p-2.5 rounded-2xl hover:bg-rose-400 transition-all shadow-[0_5px_0_rgb(159,18,57)] active:shadow-none active:translate-y-[5px]">
-          <Home className="text-white" size={24} />
+      {/* HEADER DIVERTIDO - Comprimido en móvil */}
+      <div className="relative z-20 flex justify-between items-center p-2 md:p-5 bg-white/10 backdrop-blur-xl border-b-2 border-white/20 shrink-0">
+        <button onClick={onBack} className="bg-rose-500 p-2 md:p-2.5 rounded-xl md:rounded-2xl hover:bg-rose-400 transition-all shadow-[0_3px_0_rgb(159,18,57)] md:shadow-[0_5px_0_rgb(159,18,57)] active:shadow-none active:translate-y-[3px]">
+          <Home className="text-white" size={20} md:size={24} />
         </button>
 
         <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 bg-yellow-400 px-5 py-1.5 rounded-2xl border-4 border-yellow-600 shadow-lg">
-                <Trophy size={20} className="text-yellow-800" fill="currentColor" />
-                <span className="text-yellow-900 font-black text-lg md:text-2xl italic tracking-tighter uppercase whitespace-nowrap">NIVEL {gameState.battlesWon + 1}</span>
+            <div className="flex items-center gap-1 md:gap-2 bg-yellow-400 px-3 md:px-5 py-1 md:py-1.5 rounded-xl md:rounded-2xl border-2 md:border-4 border-yellow-600 shadow-md">
+                <Trophy size={16} md:size={20} className="text-yellow-800" fill="currentColor" />
+                <span className="text-yellow-900 font-black text-xs md:text-2xl italic tracking-tighter uppercase whitespace-nowrap">NIVEL {gameState.battlesWon + 1}</span>
             </div>
-            <div className="flex gap-4 mt-2">
-               <div className="flex items-center gap-1 bg-sky-500/80 px-3 py-1 rounded-full border-2 border-sky-300 shadow-sm">
-                  <Coins size={14} className="text-yellow-300" />
-                  <span className="text-white font-black text-xs md:text-sm tracking-widest">{bits}</span>
+            <div className="flex gap-2 md:gap-4 mt-1">
+               <div className="flex items-center gap-0.5 md:gap-1 bg-sky-500/80 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-sky-300 shadow-sm">
+                  <Coins size={10} md:size={14} className="text-yellow-300" />
+                  <span className="text-white font-black text-[10px] md:text-sm tracking-widest">{bits}</span>
                </div>
-               <div className="flex items-center gap-1 bg-purple-500/80 px-3 py-1 rounded-full border-2 border-purple-300 shadow-sm">
-                  <Star size={14} className="text-yellow-200" fill="currentColor" />
-                  <span className="text-white font-black text-xs md:text-sm tracking-widest">x{gameState.damageMultiplier.toFixed(1)}</span>
+               <div className="flex items-center gap-0.5 md:gap-1 bg-purple-500/80 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-purple-300 shadow-sm">
+                  <Star size={10} md:size={14} className="text-yellow-200" fill="currentColor" />
+                  <span className="text-white font-black text-[10px] md:text-sm tracking-widest">x{gameState.damageMultiplier.toFixed(1)}</span>
                </div>
             </div>
         </div>
 
-        <div className="w-12"></div>
+        <div className="w-8 md:w-12"></div>
       </div>
 
-      {/* BATTLE STAGE */}
-      <div className="flex-1 min-h-0 relative flex flex-row justify-around items-center px-2 md:px-8 py-4 overflow-hidden">
+      {/* BATTLE STAGE - Flex-1 asegura que tome el espacio sobrante */}
+      <div className="flex-1 min-h-0 relative flex flex-row justify-around items-center px-1 md:px-8 py-2 md:py-4 overflow-hidden">
         
         {/* Player Container */}
         <div className="relative flex flex-col items-center group z-10 transition-transform duration-500">
-           {/* HP BAR PLAYER - Bubbly Style */}
-           <div className="mb-4 bg-white p-2 md:p-3 rounded-3xl border-4 border-blue-600 w-36 md:w-64 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-1 opacity-10">
-                 <Shield size={32} />
+           {/* HP BAR PLAYER */}
+           <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-blue-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+              <div className="flex justify-between items-center mb-0.5 md:mb-1.5">
+                <span className="text-blue-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{playerForm.display}</span>
+                <span className="text-blue-800 font-black text-[8px] md:text-sm">{gameState.playerHp}HP</span>
               </div>
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-blue-600 font-black uppercase text-[10px] md:text-sm italic truncate w-16 md:w-auto tracking-tight">{playerForm.display}</span>
-                <span className="text-blue-800 font-black text-[10px] md:text-sm">{gameState.playerHp} HP</span>
-              </div>
-              <div className="w-full bg-slate-200 h-4 md:h-6 rounded-full overflow-hidden border-2 border-slate-300 shadow-inner">
+              <div className="w-full bg-slate-200 h-2 md:h-6 rounded-full overflow-hidden border border-slate-300 shadow-inner">
                 <div className={`h-full transition-all duration-700 rounded-full ${gameState.playerHp < 30 ? 'bg-rose-500 animate-pulse' : 'bg-blue-500'}`} style={{ width: `${gameState.playerHp}%` }}>
                    <div className="w-full h-1/2 bg-white/30 rounded-full"></div>
                 </div>
               </div>
            </div>
 
-           {/* Energy Orbs - More colorful */}
-           <div className="absolute -left-5 md:-left-24 bottom-10 md:bottom-20 flex flex-col-reverse gap-1.5 md:gap-3">
+           {/* Energy Orbs - Más compactos en móvil */}
+           <div className="absolute -left-3 md:-left-24 bottom-6 md:bottom-20 flex flex-col-reverse gap-1 md:gap-3">
              {[...Array(10)].map((_, i) => (
                 <div 
                   key={i} 
-                  className={`w-4 h-4 md:w-8 md:h-8 rounded-full border-2 border-white/20 transition-all duration-300 transform ${i < gameState.energy ? 'bg-yellow-400 shadow-[0_0_15px_#fbbf24] scale-110 rotate-12' : 'bg-white/10'}`}
+                  className={`w-3 h-3 md:w-8 md:h-8 rounded-full border border-white/20 transition-all duration-300 transform ${i < gameState.energy ? 'bg-yellow-400 shadow-[0_0_10px_#fbbf24] scale-110' : 'bg-white/10'}`}
                 >
-                  {i < gameState.energy && <Zap size={10} className="text-white m-auto md:mt-1.5 animate-pulse" fill="currentColor" />}
+                  {i < gameState.energy && <Zap size={8} className="text-white m-auto md:mt-1.5" fill="currentColor" />}
                 </div>
              ))}
            </div>
@@ -236,14 +233,14 @@ const PokemonBattleArena = ({
              src={playerForm.image} 
              alt={playerForm.name}
              className={`
-               w-32 h-32 md:w-80 md:h-80 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)]
+               w-24 h-24 md:w-80 md:h-80 object-contain drop-shadow-lg
                transition-all duration-300
                ${playerForm.shouldFlip ? '-scale-x-100' : ''}
-               ${animating === 'player-attack-hit' ? 'translate-x-20 md:translate-x-40 scale-125' : ''}
-               ${animating === 'player-sm-atk' ? 'translate-x-24 md:translate-x-40 scale-125 rotate-6' : ''}
-               ${animating === 'player-md-atk' ? 'translate-x-32 md:translate-x-60 scale-150 -rotate-6' : ''}
-               ${animating === 'player-final-atk' ? 'translate-x-48 md:translate-x-96 scale-[2.2] brightness-[1.2]' : ''}
-               ${animating === 'enemy-attack-hit' || animating === 'boss-special-hit' ? 'opacity-50 blur-[2px] animate-shake translate-y-4' : ''}
+               ${animating === 'player-attack-hit' ? 'translate-x-10 md:translate-x-40 scale-125' : ''}
+               ${animating === 'player-sm-atk' ? 'translate-x-12 md:translate-x-40 scale-125' : ''}
+               ${animating === 'player-md-atk' ? 'translate-x-16 md:translate-x-60 scale-150' : ''}
+               ${animating === 'player-final-atk' ? 'translate-x-24 md:translate-x-96 scale-[2.2]' : ''}
+               ${animating === 'enemy-attack-hit' || animating === 'boss-special-hit' ? 'opacity-50 blur-[1px] animate-shake translate-y-2' : ''}
              `}
            />
         </div>
@@ -252,9 +249,9 @@ const PokemonBattleArena = ({
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-40">
            {feedback && (
              <h2 className={`
-                text-5xl md:text-9xl font-black uppercase italic tracking-tighter text-center scale-150
+                text-xl md:text-5xl font-black uppercase italic tracking-tighter text-center
                 ${animating?.includes('final') ? 'text-white animate-final-text' : 'text-yellow-400 animate-bounce-in'}
-                drop-shadow-[0_8px_0_#92400e] text-stroke-small md:text-stroke-large
+                drop-shadow-[0_2px_0_#92400e] md:drop-shadow-[0_4px_0_#92400e] text-stroke-small md:text-stroke-large
              `}>
                {feedback}
              </h2>
@@ -263,16 +260,13 @@ const PokemonBattleArena = ({
 
         {/* Enemy Container */}
         <div className="relative flex flex-col items-center z-10 transition-transform duration-500">
-           {/* HP BAR ENEMY - Bubbly Style */}
-           <div className="mb-4 bg-white p-2 md:p-3 rounded-3xl border-4 border-rose-600 w-36 md:w-64 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 left-0 p-1 opacity-10">
-                 <Swords size={32} />
+           {/* HP BAR ENEMY */}
+           <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-rose-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+              <div className="flex justify-between items-center mb-0.5 md:mb-1.5">
+                <span className="text-rose-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{enemyPokemon.name}</span>
+                <span className="text-rose-800 font-black text-[8px] md:text-sm">{gameState.enemyHp}HP</span>
               </div>
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-rose-600 font-black uppercase text-[10px] md:text-sm italic truncate w-16 md:w-auto tracking-tight">{enemyPokemon.name}</span>
-                <span className="text-rose-800 font-black text-[10px] md:text-sm">{gameState.enemyHp} HP</span>
-              </div>
-              <div className="w-full bg-slate-200 h-4 md:h-6 rounded-full overflow-hidden border-2 border-slate-300 shadow-inner">
+              <div className="w-full bg-slate-200 h-2 md:h-6 rounded-full overflow-hidden border border-slate-300 shadow-inner">
                 <div 
                    className={`h-full transition-all duration-700 rounded-full ${enemyPokemon.isBoss ? 'bg-purple-600 shadow-[0_0_15px_purple]' : 'bg-rose-500'}`} 
                    style={{ width: `${(gameState.enemyHp / gameState.maxEnemyHp) * 100}%` }}
@@ -286,92 +280,78 @@ const PokemonBattleArena = ({
              src={enemyPokemon.sprites?.other?.home?.front_default || enemyPokemon.sprites?.other?.['official-artwork']?.front_default || enemyPokemon.sprites?.front_default}
              alt={enemyPokemon.name}
              className={`
-               w-32 h-32 md:w-80 md:h-80 object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,0.3)]
+               w-24 h-24 md:w-80 md:h-80 object-contain drop-shadow-lg
                transition-all duration-300
-               ${animating === 'enemy-attack-hit' ? '-translate-x-20 md:-translate-x-40 scale-125' : ''}
-               ${animating === 'boss-special-hit' ? '-translate-x-32 md:-translate-x-60 scale-150 brightness-125 rotate-12' : ''}
-               ${animating?.includes('player') ? 'opacity-50 blur-[2px] animate-shake translate-y-4' : ''}
-               ${enemyPokemon.isBoss ? 'drop-shadow-[0_0_40px_rgba(168,85,247,0.7)]' : ''}
+               ${animating === 'enemy-attack-hit' ? '-translate-x-10 md:-translate-x-40 scale-125' : ''}
+               ${animating === 'boss-special-hit' ? '-translate-x-16 md:-translate-x-60 scale-150 brightness-125' : ''}
+               ${animating?.includes('player') ? 'opacity-50 blur-[1px] animate-shake translate-y-2' : ''}
+               ${enemyPokemon.isBoss ? 'drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]' : ''}
              `}
            />
-           {enemyPokemon.isBoss && (
-             <div className="absolute -top-6 md:-top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-1.5 rounded-2xl border-2 border-white shadow-xl animate-pulse whitespace-nowrap z-20 scale-110 md:scale-125">
-                <Star size={16} fill="white" className="text-white" />
-                <span className="text-white font-black text-[10px] md:text-sm italic tracking-widest uppercase">¡JEFE LEGENDARIO!</span>
-                <Star size={16} fill="white" className="text-white" />
-             </div>
-           )}
         </div>
       </div>
 
-      {/* OPERACIONES Y ACCIONES - Mas colorido y amigable */}
-      <div className="relative z-30 bg-white/95 border-t-4 border-indigo-200 p-4 md:p-8 flex flex-col md:flex-row gap-6 md:gap-10 shrink-0 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
+      {/* OPERACIONES Y ACCIONES - Altura reducida en PC/Tablet */}
+      <div className="relative z-30 bg-white border-t-2 md:border-t-4 border-indigo-200 p-2 md:p-5 flex flex-col md:flex-row gap-2 md:gap-6 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
         
-        {/* Menu de Acciones */}
-        <div className="w-full md:w-1/3 flex flex-col gap-4">
+        {/* Menu de Acciones - Muy comprimido en móvil */}
+        <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar">
            
-           <div className="flex md:flex-col gap-3 overflow-x-auto no-scrollbar md:h-full">
-              {/* TIENDA */}
-              <div className="shrink-0 md:w-full bg-sky-50 p-3 rounded-3xl border-2 border-sky-200">
-                <h4 className="text-sky-600 font-black text-[10px] md:text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
-                   <Target size={14}/> TIENDA DE AYUDA
-                </h4>
-                <div className="flex md:grid md:grid-cols-2 gap-2">
-                   <button onClick={handleBuyHealth} className="bg-emerald-400 hover:bg-emerald-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-emerald-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
-                      <Heart size={20} fill="currentColor" />
-                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">+60 HP (50)</span>
-                   </button>
-                   <button onClick={handleBuyDamage} className="bg-orange-400 hover:bg-orange-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-orange-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
-                      <Swords size={20} fill="currentColor" />
-                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">MAX PW (100)</span>
-                   </button>
-                </div>
+           {/* TIENDA RAPIDA */}
+           <div className="shrink-0 md:w-full bg-sky-50 p-2 md:p-3 rounded-xl md:rounded-3xl border md:border-2 border-sky-100">
+              <div className="flex md:grid md:grid-cols-2 gap-2">
+                 <button onClick={handleBuyHealth} className="bg-emerald-400 text-white px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-2xl border-b-2 md:border-b-4 border-emerald-600 flex items-center md:flex-col gap-1.5 active:translate-y-0.5 active:border-b-0">
+                    <Heart size={14} md:size={18} fill="currentColor" />
+                    <span className="text-[8px] md:text-[10px] font-black uppercase whitespace-nowrap">+60HP (50)</span>
+                 </button>
+                 <button onClick={handleBuyDamage} className="bg-orange-400 text-white px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-2xl border-b-2 md:border-b-4 border-orange-600 flex items-center md:flex-col gap-1.5 active:translate-y-0.5 active:border-b-0">
+                    <Swords size={14} md:size={18} fill="currentColor" />
+                    <span className="text-[8px] md:text-[10px] font-black uppercase whitespace-nowrap">ATK+ (100)</span>
+                 </button>
               </div>
+           </div>
 
-              {/* ESPECIALES */}
-              <div className="shrink-0 md:w-full bg-purple-50 p-3 rounded-3xl border-2 border-purple-200">
-                <h4 className="text-purple-600 font-black text-[10px] md:text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
-                   <Zap size={14}/> PODERES ESPECIALES
-                </h4>
-                <div className="flex md:flex-col gap-2">
-                   <button onClick={() => handleTriggerSpecial(1)} disabled={gameState.energy < 2} className={`md:w-full py-2 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 2 ? 'bg-indigo-500 text-white border-indigo-700 hover:bg-indigo-400 active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
-                      <span className="text-xs font-black truncate">{attackNames[0]}</span>
-                      <span className="text-[10px] bg-black/20 px-2 rounded-full ml-2">2 <Zap size={8} className="inline mb-0.5" /></span>
-                   </button>
-                   <button onClick={() => handleTriggerSpecial(2)} disabled={gameState.energy < 3} className={`md:w-full py-2 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 3 ? 'bg-purple-500 text-white border-purple-700 hover:bg-purple-400 active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
-                      <span className="text-xs font-black truncate">{attackNames[1]}</span>
-                      <span className="text-[10px] bg-black/20 px-2 rounded-full ml-2">3 <Zap size={8} className="inline mb-0.5" /></span>
-                   </button>
-                   <button onClick={() => handleTriggerSpecial(3)} disabled={gameState.energy < 5} className={`md:w-full py-2.5 px-4 rounded-2xl flex justify-between items-center transition-all border-b-4 ${gameState.energy >= 5 ? 'bg-gradient-to-r from-orange-400 to-rose-400 text-white border-red-700 animate-pulse shadow-rose-200 shadow-lg active:translate-y-1 active:border-b-0' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
-                      <span className="text-sm font-black italic truncate">{attackNames[2]}</span>
-                      <span className="text-[10px] bg-black/40 px-2 rounded-full border border-white/30">5 <Star size={10} className="inline mb-0.5" /></span>
-                   </button>
-                </div>
-              </div>
+           {/* ESPECIALES RAPIDOS */}
+           <div className="shrink-0 md:w-full bg-purple-50 p-2 md:p-3 rounded-xl md:rounded-3xl border md:border-2 border-purple-100 flex gap-2 md:flex-col">
+              <button onClick={() => handleTriggerSpecial(1)} disabled={gameState.energy < 2} className={`shrink-0 md:w-full py-1.5 md:py-2 px-2 md:px-4 rounded-lg md:rounded-2xl flex items-center justify-center md:justify-between border-b-2 md:border-b-4 ${gameState.energy >= 2 ? 'bg-indigo-500 text-white border-indigo-700' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                 <span className="text-[8px] md:text-xs font-black truncate hidden md:block">{attackNames[0]}</span>
+                 <Zap size={14} fill="currentColor" className="md:hidden text-yellow-300" />
+                 <span className="text-[8px] md:text-[10px] bg-black/20 px-1 md:px-2 rounded-full ml-1">2</span>
+              </button>
+              <button onClick={() => handleTriggerSpecial(2)} disabled={gameState.energy < 3} className={`shrink-0 md:w-full py-1.5 md:py-2 px-2 md:px-4 rounded-lg md:rounded-2xl flex items-center justify-center md:justify-between border-b-2 md:border-b-4 ${gameState.energy >= 3 ? 'bg-purple-500 text-white border-purple-700' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                 <span className="text-[8px] md:text-xs font-black truncate hidden md:block">{attackNames[1]}</span>
+                 <Zap size={14} fill="currentColor" className="md:hidden text-yellow-300" />
+                 <span className="text-[8px] md:text-[10px] bg-black/20 px-1 md:px-2 rounded-full ml-1">3</span>
+              </button>
+              <button onClick={() => handleTriggerSpecial(3)} disabled={gameState.energy < 5} className={`shrink-0 md:w-full py-1.5 md:py-2.5 px-2 md:px-4 rounded-lg md:rounded-2xl flex items-center justify-center md:justify-between border-b-2 md:border-b-4 ${gameState.energy >= 5 ? 'bg-gradient-to-r from-orange-400 to-rose-400 text-white border-red-700' : 'bg-slate-200 text-slate-400 border-slate-300 opacity-50'}`}>
+                 <span className="text-[9px] md:text-sm font-black italic truncate hidden md:block">{attackNames[2]}</span>
+                 <Star size={14} fill="currentColor" className="md:hidden text-yellow-200" />
+                 <span className="text-[8px] md:text-[10px] bg-black/40 px-1 md:px-2 rounded-full ml-1">5</span>
+              </button>
            </div>
         </div>
 
-        {/* MATH QUESTION - Very prominent and clear */}
-        <div className="flex-1 bg-sky-50 rounded-3xl p-5 md:p-10 border-4 border-sky-400 flex flex-col items-center justify-center shadow-inner">
+        {/* MATH QUESTION - Optimizado para PC/Tablet */}
+        <div className="flex-1 bg-sky-50 rounded-2xl md:rounded-3xl p-3 md:p-6 border-2 md:border-4 border-sky-400 flex flex-col items-center justify-center">
             {!currentQuestion ? (
-              <div className="text-sky-400 font-bold animate-pulse text-2xl uppercase tracking-[0.2em] italic">PREPARÁNDOSE...</div>
+              <div className="text-sky-400 font-bold animate-pulse text-sm md:text-2xl uppercase italic">PREPARANDO...</div>
             ) : (
               <div className="w-full flex flex-col items-center">
-                <div className="text-indigo-400 font-black text-xs md:text-sm uppercase tracking-widest mb-4">¡RESUELVE Y ATACA!</div>
-                <h3 className="text-6xl md:text-9xl text-indigo-900 font-black mb-8 md:mb-14 drop-shadow-sm select-none">{currentQuestion.question}</h3>
+                <div className="text-indigo-400 font-black text-[8px] md:text-sm uppercase tracking-widest mb-1 md:mb-2 text-center">¡RESUELVE RÁPIDO!</div>
+                <h3 className="text-3xl md:text-7xl text-indigo-900 font-black mb-3 md:mb-6 drop-shadow-sm">{currentQuestion.question}</h3>
                 
-                <div className="grid grid-cols-2 gap-4 md:gap-8 w-full max-w-3xl">
+                <div className="grid grid-cols-2 gap-2 md:gap-5 w-full max-w-2xl">
                    {currentQuestion.options.map((opt, i) => (
                       <button 
                          key={i} 
                          onClick={() => submitAnswer(opt)}
                          className={`
-                            py-5 md:py-10 px-4 rounded-[2rem] font-black text-3xl md:text-6xl
-                            transition-all active:translate-y-2 active:border-b-0
-                            ${i === 0 ? 'bg-rose-400 border-b-[10px] border-rose-600 text-white hover:bg-rose-300' : ''}
-                            ${i === 1 ? 'bg-sky-400 border-b-[10px] border-sky-600 text-white hover:bg-sky-300' : ''}
-                            ${i === 2 ? 'bg-yellow-400 border-b-[10px] border-yellow-600 text-white hover:bg-yellow-300' : ''}
-                            ${i === 3 ? 'bg-purple-400 border-b-[10px] border-purple-600 text-white hover:bg-purple-300' : ''}
+                            py-3 md:py-6 px-2 rounded-xl md:rounded-3xl font-black text-xl md:text-4xl
+                            transition-all border-b-4 md:border-b-8 text-white active:translate-y-1 active:border-b-0
+                            ${i === 0 ? 'bg-rose-400 border-rose-600' : ''}
+                            ${i === 1 ? 'bg-sky-400 border-sky-600' : ''}
+                            ${i === 2 ? 'bg-yellow-400 border-yellow-600' : ''}
+                            ${i === 3 ? 'bg-purple-400 border-purple-600' : ''}
                          `}
                       >
                          {opt}
@@ -388,42 +368,21 @@ const PokemonBattleArena = ({
         
         .font-sans { font-family: 'Fredoka One', cursive, sans-serif; }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        
         .animate-shake { animation: shake 0.2s ease-in-out infinite; }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-8px); }
-          75% { transform: translateX(8px); }
-        }
-
-        .animate-shake-red { animation: shake-red 0.5s ease-in-out 3; }
-        @keyframes shake-red {
-          0%, 100% { transform: translate(0, 0); }
-          10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -10px); background: rgba(255, 0, 0, 0.2); }
-          20%, 40%, 60%, 80% { transform: translate(10px, 10px); }
-        }
-
-        .animate-epic-shake { animation: epic-shake 1.5s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes epic-shake {
-          0% { transform: scale(1); }
-          20% { transform: scale(1.1) rotate(2deg); background: white; }
-          40% { transform: scale(1.2) rotate(-2deg); }
-          100% { transform: scale(1); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
         }
 
         @keyframes bounce-in {
           0% { transform: scale(0); }
-          50% { transform: scale(1.2); }
+          50% { transform: scale(1.1); }
           100% { transform: scale(1); }
         }
-        .animate-bounce-in { animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2); }
 
-        .text-stroke-small { -webkit-text-stroke: 2px #4338ca; }
+        .text-stroke-small { -webkit-text-stroke: 1.5px #4338ca; }
         .text-stroke-large { -webkit-text-stroke: 4px #4338ca; }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
