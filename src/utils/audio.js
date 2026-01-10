@@ -13,7 +13,7 @@ export const SOUNDS = {
   DEV_ATTACK: '/music/Voicy_playinclass.mp3',
   PIKACHU_SPECIAL: '/music/pikachu-thunder.mp3',
   FATALITY: '/music/Voicy_Fatality.mp3',
-  TRALALERO_ATTACK: '/music/Voicy_tralalero tralala.mp3'
+  TRALALERO_ATTACK: '/music/Voicy_tralalero tralala .mp3'
 };
 
 class AudioManager {
@@ -23,7 +23,7 @@ class AudioManager {
     this.isMuted = false;
   }
 
-  playSFX(path, volume = 0.4, fadeDuration = 0) {
+  playSFX(path, volume = 0.4, fadeDuration = 0, maxDuration = 0) {
     const audio = new Audio(path);
     if (fadeDuration > 0) {
       audio.volume = 0;
@@ -39,6 +39,13 @@ class AudioManager {
     } else {
       audio.volume = volume;
       audio.play().catch(e => console.log("Audio play blocked", e));
+    }
+
+    if (maxDuration > 0) {
+      setTimeout(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }, maxDuration);
     }
   }
 

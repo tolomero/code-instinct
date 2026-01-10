@@ -34,12 +34,12 @@ export const PLAYER_CHARACTERS = [
   {
     id: "tralalero",
     name: "Tralalero Tralala",
-    image: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYW5lNnNramx5cG9hOG10Z3hyYXc5bDg2bTAyOHp1cDFhcnRnNnFuZSZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/yk6cfhRiq15dfHtoPj/giphy.gif",
-    attackImage: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYW5lNnNramx5cG9hOG10Z3hyYXc5bDg2bTAyOHp1cDFhcnRnNnFuZSZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/yk6cfhRiq15dfHtoPj/giphy.gif",
+    image: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHd0N3Bnb3QxeWRlZWRrcHF4c2Q3Y2kzMzNramhkZGR3b3pjMTI1diZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/1rpYkOqbw1p0rRDebe/giphy.gif",
+    attackImage: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExazFsb3c0N2hncDVlMGxrb2d1YmUxa2k2eHQ3MTBoNXRteGhkajBhaiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/XqvXCxEmWCP8ADeDnS/giphy.gif",
     idleFlip: true,
     attackFlip: true,
-    requiredCups: 100,
-    specialBg: "https://fbi.cults3d.com/uploaders/43936812/illustration-file/b2e98877-fa30-4d5a-827b-5adfe8e27136/A-muscular-anthropomorphic-shark-wearing-blue-sneakers-runs-on-a-sunny-beach-with-palm-trees-trakale.jpg"
+    requiredCups:20,
+    specialBg: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHd0N3Bnb3QxeWRlZWRrcHF4c2Q3Y2kzMzNramhkZGR3b3pjMTI1diZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/CDF93YmH1zN3ACuNZG/giphy.gif"
   }
 ];
 

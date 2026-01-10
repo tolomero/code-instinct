@@ -185,7 +185,7 @@ export default function App() {
         } else if (selectedPlayer?.id === 'pikachu') {
           audioManager.playSFX(SOUNDS.PIKACHU_SPECIAL, 0.5);
         } else if (selectedPlayer?.id === 'tralalero') {
-          audioManager.playSFX(SOUNDS.TRALALERO_ATTACK, 0.8);
+          audioManager.playSFX(SOUNDS.TRALALERO_ATTACK, 0.8, 0, 6000);
         } else {
           audioManager.playSFX(SOUNDS.HIT, 0.4);
         }
@@ -226,7 +226,7 @@ export default function App() {
       setAnimating('enemy-attack');
       setPlayerHp(prev => Math.max(0, prev - 20));
       setComboCount(0);
-      setFeedback("¡COMBO BREAKER!");
+      setFeedback(selectedPlayer?.id === 'tralalero' ? "TRALALERO_FAIL" : "¡COMBO BREAKER!");
       audioManager.playSFX(SOUNDS.DAMAGE, 0.4);
       audioManager.playSFX(SOUNDS.COMBO_BREAKER, 0.5);
 
@@ -390,6 +390,8 @@ export default function App() {
         player={selectedPlayer}
         feedback={feedback}
         showVictoryGif={showVictoryGif}
+        bossStep={bossStep}
+        currentLevel={currentLevel}
       />
 
       {/* CONTROL AREA RESPONSIVO */}
