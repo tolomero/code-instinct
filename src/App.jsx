@@ -9,13 +9,17 @@ import StartScreen from './components/screens/StartScreen';
 import BossSelection from './components/screens/BossSelection';
 import CharacterSelection from './components/screens/CharacterSelection';
 import OutcomeScreen from './components/screens/OutcomeScreen';
+import PokemonSelection from './components/pokemon/PokemonSelection';
 
 // Game Components
+import MathModeSelection from './components/pokemon/MathModeSelection';
+import PokemonBattleArena from './components/pokemon/PokemonBattleArena';
 import HUD from './components/game/HUD';
 import CombatArena from './components/game/CombatArena';
 import QuestionInfo from './components/game/QuestionInfo';
 import ChoiceButtons from './components/game/ChoiceButtons';
 import CodeEditor from './components/game/CodeEditor';
+
 
 // Hooks
 import { useAIQuestion } from './hooks/useAIQuestion';
@@ -141,10 +145,15 @@ export default function App() {
     } else if (gameState === 'won') {
       audioManager.stopMusic();
       audioManager.playSFX(SOUNDS.VICTORY, 0.3);
+    } else if (gameMode === 'pokemon' && ['pokemon-selection', 'math-selection', 'playing'].includes(gameState)) {
+      audioManager.playMusic(SOUNDS.POKEMON_BGM, true, null, 0.05, 2000);
     }
-  }, [gameState]);
+  }, [gameState, gameMode]);
 
   useEffect(() => {
+    // Evitar lógica de juego normal si estamos en modo Pokemon
+    if (gameMode === 'pokemon') return;
+
     if (gameState === 'playing' && opponent && !question) {
       if (!question) {
         audioManager.playSFX(SOUNDS.READY_FIGHT, 0.4);
@@ -158,7 +167,7 @@ export default function App() {
       }
       fetchQuestion(currentLevel === 2);
     }
-  }, [opponent, gameState]);
+  }, [opponent, gameState, gameMode]);
 
   const handleAttack = (isCorrect) => {
     if (animating || showSolution || !question) return;
@@ -295,8 +304,34 @@ export default function App() {
       <StartScreen 
         onStartArcade={() => { setGameMode('arcade'); setGameState('boss-selection'); }}
         onStartIA={() => { setGameMode('ia'); setGameState('boss-selection'); }}
+        onStartPokemon={() => { setGameMode('pokemon'); setGameState('pokemon-selection'); }}
         onSelectPlayer={() => setGameState('character-selection')}
         selectedPlayer={selectedPlayer}
+      />
+    );
+  }
+
+  if (gameState === 'pokemon-selection') {
+    return (
+      <PokemonSelection 
+        onBack={() => setGameState('start')}
+        cups={cups}
+        onSelect={(poke) => {
+          setSelectedPlayer({ ...poke, image: `https://img.pokemondb.net/sprites/home/normal/${poke.name}.png` });
+          setGameState('math-selection'); 
+        }}
+      />
+    );
+  }
+
+  if (gameState === 'math-selection') {
+    return (
+      <MathModeSelection 
+        onBack={() => setGameState('pokemon-selection')}
+        onSelectMode={(mode) => {
+          setTargetBoss({ id: mode, name: mode.toUpperCase() }); 
+          startFight(0, 'pokemon', { id: mode, name: mode.toUpperCase() });
+        }}
       />
     );
   }
@@ -331,16 +366,38 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-white font-mono flex flex-col overflow-hidden select-none relative">
       
-      {/* BOTÓN SALIR / HOME */}
-      <button 
-        onClick={() => setShowHomeConfirm(true)}
-        className="absolute top-2 left-2 md:top-20 md:left-4 z-[60] p-1.5 md:p-3 bg-red-600/20 hover:bg-red-600 rounded-full transition-all border border-red-600/50 group shadow-lg"
-        title="Opciones de salida"
-      >
-        <Home className="group-hover:scale-110 transition-transform" size={16} />
-      </button>
+      {/* MODO POKEMON */}
+      {gameMode === 'pokemon' && targetBoss ? (
+        <PokemonBattleArena 
+           playerPokemon={selectedPlayer}
+           mathMode={targetBoss} 
+           bits={bits}
+           onEarnBits={(amount) => setBits(b => b + amount)}
+           onSpendBits={(amount) => setBits(b => Math.max(0, b - amount))}
+           onGameOver={(won) => {
+             setGameState(won ? 'won' : 'lost');
+           }}
+           onGameWin={() => {
+             // Victory against Boss 10
+             setCups(c => c + 10);
+             setGameState('won');
+             setShowVictoryGif(true);
+           }}
+           onBack={() => resetGame('start')}
+        />
+      ) : (
+        /* MODO NORMAL (ARCADE / IA) */
+        <>
+            {/* BOTÓN SALIR / HOME */}
+            <button 
+                onClick={() => setShowHomeConfirm(true)}
+                className="absolute top-2 left-2 md:top-20 md:left-4 z-[60] p-1.5 md:p-3 bg-red-600/20 hover:bg-red-600 rounded-full transition-all border border-red-600/50 group shadow-lg"
+                title="Opciones de salida"
+            >
+                <Home className="group-hover:scale-110 transition-transform" size={16} />
+            </button>
 
-      {/* MODAL DE CONFIRMACIÓN DE SALIDA (HOME) */}
+            {/* MODAL DE CONFIRMACIÓN DE SALIDA (HOME) */}
       {showHomeConfirm && (
         <ExitConfirmationOverlay 
           onBackToBosses={() => resetGame('boss-selection')}
@@ -432,6 +489,8 @@ export default function App() {
           solution={question?.solution}
           onContinue={() => { setShowSolution(false); fetchQuestion(currentLevel === 2); }}
         />
+      )}
+      </>
       )}
     </div>
   );

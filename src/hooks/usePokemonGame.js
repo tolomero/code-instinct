@@ -1,0 +1,305 @@
+import { useState, useEffect, useCallback } from 'react';
+
+// Math Generator Utility
+const generateMathQuestion = (mode, difficulty = 1) => {
+  if (!mode || !mode.id) {
+    console.warn("Math Mode missing, defaulting to suma");
+    mode = { id: 'suma' };
+  }
+
+  let num1 = 1, num2 = 1, answer = 2, operator = '+';
+  // Increase range based on difficulty (e.g., evolution stage)
+  const range = difficulty === 0 ? 10 : difficulty === 1 ? 20 : 50;
+
+  try {
+    switch (mode.id) {
+      case 'suma':
+        num1 = Math.floor(Math.random() * range) + 1;
+        num2 = Math.floor(Math.random() * range) + 1;
+        answer = num1 + num2;
+        operator = '+';
+        break;
+      case 'resta':
+        num1 = Math.floor(Math.random() * range) + 5;
+        num2 = Math.floor(Math.random() * num1); // Ensure positive result
+        answer = num1 - num2;
+        operator = '-';
+        break;
+      case 'multiplicacion':
+        num1 = Math.floor(Math.random() * 10) + 1;
+        num2 = Math.floor(Math.random() * 10) + 1;
+        answer = num1 * num2;
+        operator = '×';
+        break;
+      case 'division':
+        num2 = Math.floor(Math.random() * 9) + 2; 
+        answer = Math.floor(Math.random() * 10) + 1;
+        num1 = num2 * answer; // Ensure clean division
+        operator = '÷';
+        break;
+      default:
+        // Fallback default
+        break;
+    }
+  } catch (e) {
+    console.error("Error generating math question:", e);
+  }
+
+  // Generate wrong options
+  const options = new Set([answer]);
+  while (options.size < 4) {
+    const variance = Math.floor(Math.random() * 5) + 1;
+    const sign = Math.random() > 0.5 ? 1 : -1;
+    const fake = answer + (variance * sign);
+    if (fake >= 0) options.add(fake);
+  }
+
+  return {
+    question: `${num1} ${operator} ${num2}`,
+    answer,
+    options: Array.from(options).sort(() => Math.random() - 0.5),
+    damage: 20 + (difficulty * 10)
+  };
+};
+
+export const usePokemonGame = (playerPokemon, mathMode, onGameOver, onGameWin, onEarnBits) => {
+  const [gameState, setGameState] = useState({
+    playerHp: 100,
+    enemyHp: 100,
+    maxEnemyHp: 100,
+    turn: 0,
+    score: 0,
+    energy: 0,
+    battlesWon: 0,
+    lastAction: null,
+    damageMultiplier: 1,
+    missCount: 0, // Track failures for boss specials
+  });
+
+  const [enemyPokemon, setEnemyPokemon] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  
+  // BOSS POOLS
+  const EPIC_BOSS_IDS = [150, 151, 384, 249, 250, 382, 383, 483, 484, 487]; // Mega/Legendary for FInal
+  const MID_BOSS_IDS = [6, 9, 3, 94, 65, 130, 149]; // Megas / Gen 1 Stage 3
+
+  // Fetch Enemy
+  const fetchNewEnemy = useCallback(async () => {
+    try {
+      let randomId;
+      const isBoss = (gameState.battlesWon + 1) === 10;
+      const isMiniBoss = (gameState.battlesWon + 1) % 4 === 0 && !isBoss;
+
+      if (isBoss) {
+        randomId = EPIC_BOSS_IDS[Math.floor(Math.random() * EPIC_BOSS_IDS.length)];
+      } else if (isMiniBoss) {
+        randomId = MID_BOSS_IDS[Math.floor(Math.random() * MID_BOSS_IDS.length)];
+      } else {
+        // Higher probability of stage 2/3 for later rounds
+        const maxRange = gameState.battlesWon > 5 ? 493 : 151;
+        randomId = Math.floor(Math.random() * maxRange) + 1;
+      }
+
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      
+      const data = await res.json();
+      
+      // Scaling Difficulty
+      const difficultyMult = 1 + (gameState.battlesWon * 0.15);
+      const baseHp = isBoss ? 600 : (isMiniBoss ? 250 : 80);
+      const hp = Math.floor(baseHp * difficultyMult);
+      
+      setEnemyPokemon({
+        id: data.id,
+        name: data.name,
+        sprites: data.sprites,
+        stats: data.stats,
+        types: data.types, 
+        isBoss,
+        isMiniBoss
+      });
+      
+      setGameState(prev => ({
+        ...prev,
+        enemyHp: hp,
+        maxEnemyHp: hp,
+        lastAction: null,
+        missCount: 0 // Reset miss count for new enemy
+      }));
+
+      generateNewQuestion();
+    } catch (err) {
+      console.error("Error fetching pokemon:", err);
+      setEnemyPokemon({
+        id: 0,
+        name: "MissingNo",
+        sprites: { front_default: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/substitute.png" },
+        types: [],
+        isBoss: false
+      });
+      generateNewQuestion();
+    }
+  }, [gameState.battlesWon]);
+
+  const generateNewQuestion = () => {
+    const difficulty = Math.min(Math.floor(gameState.battlesWon / 3), 2);
+    const q = generateMathQuestion(mathMode, difficulty);
+    setCurrentQuestion(q);
+  };
+
+  useEffect(() => {
+    fetchNewEnemy();
+  }, []);
+
+  const submitAnswer = (selectedOption) => {
+    if (!currentQuestion) return;
+
+    if (selectedOption === currentQuestion.answer) {
+      // Correct
+      const chipDamage = 20 * gameState.damageMultiplier; 
+      const newEnemyHp = gameState.enemyHp - chipDamage;
+      
+      if (onEarnBits) onEarnBits(25); 
+
+      setGameState(prev => ({
+        ...prev,
+        enemyHp: Math.max(0, newEnemyHp),
+        energy: Math.min(prev.energy + 1, 10),
+        lastAction: 'correct',
+        score: prev.score + 10,
+        missCount: 0 // Success breaks the boss's momentum
+      }));
+
+      if (newEnemyHp <= 0) {
+        handleVictory();
+      } else {
+        setTimeout(() => {
+            setGameState(prev => ({ ...prev, lastAction: null }));
+            generateNewQuestion(); 
+        }, 600);
+      }
+
+    } else {
+      // WRONG
+      const newMissCount = gameState.missCount + 1;
+      let damage;
+      let action = 'wrong';
+
+      // Boss Special Logic: if 2 misses, boss uses a big attack
+      if (newMissCount >= 2 && (enemyPokemon.isBoss || enemyPokemon.isMiniBoss)) {
+          damage = 40; // Boss special damage
+          action = 'boss-special';
+      } else {
+          damage = 15 + (Math.floor(gameState.battlesWon / 2) * 4);
+      }
+
+      const newPlayerHp = gameState.playerHp - damage;
+      
+      setGameState(prev => ({
+        ...prev,
+        playerHp: Math.max(0, newPlayerHp),
+        lastAction: action,
+        missCount: newMissCount
+      }));
+
+      if (newPlayerHp <= 0) {
+        setTimeout(() => onGameOver(false), 1000);
+      } else {
+        setTimeout(() => {
+            setGameState(prev => ({ ...prev, lastAction: null }));
+            generateNewQuestion(); // Generate new question even on fail to keep it moving
+        }, 1000);
+      }
+    }
+  };
+
+  // cost = 2, 3, or 5
+  const useSpecialAttack = (level) => {
+    const costs = { 1: 2, 2: 3, 3: 5 };
+    const powers = { 1: 45, 2: 80, 3: 200 };
+    const cost = costs[level];
+    
+    if (gameState.energy < cost) return false;
+
+    const damage = powers[level] * gameState.damageMultiplier;
+    const newEnemyHp = gameState.enemyHp - damage;
+
+    setGameState(prev => ({
+      ...prev,
+      energy: prev.energy - cost,
+      enemyHp: Math.max(0, newEnemyHp),
+      lastAction: level === 3 ? 'final-attack' : (level === 2 ? 'medium-attack' : 'small-attack')
+    }));
+
+    if (newEnemyHp <= 0) {
+      setTimeout(() => handleVictory(), 1500);
+    } else {
+      setTimeout(() => {
+        setGameState(prev => ({ ...prev, lastAction: null }));
+        generateNewQuestion();
+      }, 1000);
+    }
+
+    return true;
+  };
+
+  const buyHealth = () => {
+    setGameState(prev => ({ ...prev, playerHp: Math.min(100, prev.playerHp + 60) })); 
+  };
+
+  const buyDamage = () => {
+    setGameState(prev => ({ ...prev, damageMultiplier: prev.damageMultiplier + 0.35 })); 
+  };
+
+  const evolutionStage = Math.min(Math.floor(gameState.battlesWon / 3), 2);
+  
+  const getPlayerForm = () => {
+    if (!playerPokemon.evolutions) return playerPokemon;
+    const formName = playerPokemon.evolutions[evolutionStage];
+    return {
+      ...playerPokemon,
+      name: formName,
+      display: formName.charAt(0).toUpperCase() + formName.slice(1),
+      image: `https://img.pokemondb.net/sprites/home/normal/${formName}.png`
+    };
+  };
+
+  const playerForm = getPlayerForm();
+
+  const handleVictory = () => {
+      const wins = gameState.battlesWon + 1;
+      
+      if (wins === 10) {
+        setGameState(prev => ({ ...prev, battlesWon: wins, lastAction: 'victory' }));
+        setTimeout(() => {
+           if (onGameWin) onGameWin();
+        }, 2000);
+        return;
+      }
+
+      setGameState(prev => ({
+        ...prev,
+        battlesWon: wins,
+        playerHp: Math.min(100, prev.playerHp + 25), 
+        lastAction: 'victory'
+      }));
+
+      setTimeout(() => {
+         // Evolution check is now automatic via battlesWon
+         fetchNewEnemy();
+      }, 2000);
+  };
+
+  return {
+    gameState,
+    enemyPokemon,
+    currentQuestion,
+    submitAnswer,
+    useSpecialAttack,
+    buyHealth,
+    buyDamage,
+    evolutionStage,
+    playerForm
+  };
+};
