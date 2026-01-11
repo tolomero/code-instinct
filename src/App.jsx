@@ -56,9 +56,28 @@ export default function App() {
   const [usedQuestions, setUsedQuestions] = useState([]);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const [boughtHint, setBoughtHint] = useState(false);
-  const [cups, setCups] = useState(0);
-  const [defeatedBosses, setDefeatedBosses] = useState([]);
+  const [defeatedBosses, setDefeatedBosses] = useState(() => JSON.parse(localStorage.getItem('defeatedBosses') || '[]'));
   const [showVictoryGif, setShowVictoryGif] = useState(false);
+  const [unlockedPokemonIds, setUnlockedPokemonIds] = useState(() => JSON.parse(localStorage.getItem('unlockedPokemonIds') || '[7, 25]'));
+  const [unlockedCardIds, setUnlockedCardIds] = useState(() => JSON.parse(localStorage.getItem('unlockedCardIds') || '[]'));
+  const [cups, setCups] = useState(() => parseInt(localStorage.getItem('cups') || '0'));
+
+  // Sync with Local Storage
+  useEffect(() => {
+    localStorage.setItem('cups', cups);
+  }, [cups]);
+
+  useEffect(() => {
+    localStorage.setItem('defeatedBosses', JSON.stringify(defeatedBosses));
+  }, [defeatedBosses]);
+
+  useEffect(() => {
+    localStorage.setItem('unlockedPokemonIds', JSON.stringify(unlockedPokemonIds));
+  }, [unlockedPokemonIds]);
+
+  useEffect(() => {
+    localStorage.setItem('unlockedCardIds', JSON.stringify(unlockedCardIds));
+  }, [unlockedCardIds]);
 
   const { fetchQuestion: getNextQuestion, aiLoading } = useAIQuestion(targetBoss, gameMode, currentLevel, usedQuestions, setUsedQuestions);
 
@@ -78,6 +97,7 @@ export default function App() {
     setShowSolution(false);
     setBoughtHint(false);
     setShowHomeConfirm(false);
+    setShowVictoryGif(false);
     setInputCode("");
     setBossStep(0);
   };
@@ -316,6 +336,16 @@ export default function App() {
       <PokemonSelection 
         onBack={() => setGameState('start')}
         cups={cups}
+        unlockedPokemonIds={unlockedPokemonIds}
+        unlockedCardIds={unlockedCardIds}
+        onUnlockPokemon={(id, cost) => {
+          setCups(c => c - cost);
+          setUnlockedPokemonIds(prev => [...new Set([...prev, id])]);
+        }}
+        onBuyCard={(id, cost) => {
+          setCups(c => c - cost);
+          setUnlockedCardIds(prev => [...new Set([...prev, id])]);
+        }}
         onSelect={(poke) => {
           setSelectedPlayer({ ...poke, image: `https://img.pokemondb.net/sprites/home/normal/${poke.name}.png` });
           setGameState('math-selection'); 
@@ -378,10 +408,11 @@ export default function App() {
              setGameState(won ? 'won' : 'lost');
            }}
            onGameWin={() => {
-             // Victory against Boss 10
-             setCups(c => c + 10);
+             // Victory against Boss 15 CUPS
+             setCups(c => c + 15);
              setGameState('won');
              setShowVictoryGif(true);
+             setTimeout(() => setShowVictoryGif(false), 6000);
            }}
            onBack={() => resetGame('start')}
         />

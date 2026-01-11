@@ -12,6 +12,7 @@ export const SOUNDS = {
   FIGHTING_COMBO_FIVE_HITS: '/music/blaster_combo_.mp3',
   DEV_ATTACK: '/music/playinclass.mp3',
   PIKACHU_SPECIAL: '/music/pikachu-thunder.mp3',
+  PIKACHU_RUNNING: '/music/pikachucorriendo.mp3',
   FATALITY: '/music/fatality.mp3',
   TRALALERO_ATTACK: '/music/tralalero_tralala_.mp3',
   POKEMON_BGM: '/music/pokemon_bgm.mp3',

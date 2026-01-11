@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles, Target, Coins } from 'lucide-react';
+import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles, Target, Coins, Image } from 'lucide-react';
 import { usePokemonGame } from '../../hooks/usePokemonGame';
 import { audioManager, SOUNDS } from '../../utils/audio';
 
@@ -39,6 +39,7 @@ const PokemonBattleArena = ({
   const [feedback, setFeedback] = useState(null);
   const [screenEffect, setScreenEffect] = useState(null);
   const [overlayGif, setOverlayGif] = useState(null);
+  const [customBg, setCustomBg] = useState(null);
   const prevStageRef = useRef(evolutionStage);
 
   const GET_ATTACK_NAMES = (stage, type = 'normal') => {
@@ -99,14 +100,23 @@ const PokemonBattleArena = ({
       setAnimating(isMedium ? 'player-md-atk' : 'player-sm-atk');
       setFeedback('¡SÚPER!');
       if (isMedium) setScreenEffect('flash-white');
-      const cry = GET_CRY(playerForm.name);
-      if (cry) audioManager.playSFX(cry, isMedium ? 0.8 : 0.7);
-      else audioManager.playSFX(isMedium ? SOUNDS.ULTRA_COMBO : SOUNDS.HIT, 0.6);
+      if (playerForm.name === 'pikachu') {
+        audioManager.playSFX(isMedium ? SOUNDS.PIKACHU_SPECIAL : SOUNDS.PIKACHU_RUNNING, 0.7);
+      } else {
+        const cry = GET_CRY(playerForm.name);
+        if (cry) audioManager.playSFX(cry, isMedium ? 0.8 : 0.7);
+        else audioManager.playSFX(isMedium ? SOUNDS.ULTRA_COMBO : SOUNDS.HIT, 0.6);
+      }
 
       if (playerForm.name === 'charizard' || playerForm.name === 'charizard-mega-x') {
         setOverlayGif('https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3dXQzOXhiaXd5bnliNmt5ZG96cmEwZXVvbmk2MWh5YW9iNnltYzI2aSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/48cVVAf9vam9W/giphy.gif');
       } else if (playerForm.name === 'charmander' || playerForm.name === 'charmeleon') {
         setOverlayGif('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExcmlpMXp6dTJhOG5iZjZ1NjEzOXkyaGI3M2ppNmVqNWIyZWVhZDM0eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WJ7Tr9wi8xVe0/giphy.gif');
+      } else if (playerForm.name === 'pikachu') {
+        setOverlayGif(isMedium 
+          ? 'https://media.giphy.com/media/7ISIRaCMrgFfa/giphy.gif'
+          : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHdvbGo2djAyd3ZrcDhkdmg3ZTg5b241bHk2a2swemdlbnVrbmoxNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/68kKd6gmSKYww/giphy.gif'
+        );
       }
       setTimeout(() => setOverlayGif(null), isMedium ? 4000 : 3500);
       setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, isMedium ? 3000 : 2500);
@@ -114,12 +124,20 @@ const PokemonBattleArena = ({
       setAnimating('player-final-atk');
       setFeedback('¡ÉPICO!');
       setScreenEffect('epic-shake');
-      const cry = GET_CRY(playerForm.name);
-      if (cry) audioManager.playSFX(cry, 1.0);
-      else audioManager.playSFX(SOUNDS.FATALITY, 0.8);
+      
+      if (playerForm.name === 'pikachu') {
+        audioManager.playSFX(SOUNDS.PIKACHU_SPECIAL, 1.0);
+      } else {
+        const cry = GET_CRY(playerForm.name);
+        if (cry) audioManager.playSFX(cry, 1.0);
+        else audioManager.playSFX(SOUNDS.FATALITY, 0.8);
+      }
 
       if (['charmander', 'charmeleon', 'charizard', 'charizard-mega-x'].includes(playerForm.name)) {
         setOverlayGif('https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3cHhwcGM0bmc2c3Y3dm1rNmI0Mnd6dGFscDRjOHFkbzBnNTBscnRveSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/kRgzY3qVnkEa2lIAxf/giphy.gif');
+        setTimeout(() => setOverlayGif(null), 5500);
+      } else if (playerForm.name === 'pikachu') {
+        setOverlayGif('https://media.giphy.com/media/12r4pHjvAOv48o/giphy.gif');
         setTimeout(() => setOverlayGif(null), 5500);
       }
       setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, 4000);
@@ -137,6 +155,19 @@ const PokemonBattleArena = ({
   const handleBuyDamage = () => {
     if (bits >= 100) { onSpendBits(100); buyDamage(); audioManager.playSFX(SOUNDS.BUY, 0.6); }
     else { audioManager.playSFX(SOUNDS.ERROR, 0.4); }
+  };
+
+  const handleBuyBackground = () => {
+    if (bits >= 150) {
+      onSpendBits(150);
+      const bg = playerForm.name === 'pikachu'
+        ? 'https://media.giphy.com/media/G2qi0ogzHYMVDfQoVb/giphy.gif'
+        : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6JmN0PWcvMTRkdUk2bzFLUUY4cXMvc291cmNlLmdpZg--/giphy.gif';
+      setCustomBg(bg);
+      audioManager.playSFX(SOUNDS.BUY, 0.6);
+    } else {
+      audioManager.playSFX(SOUNDS.ERROR, 0.4);
+    }
   };
 
   const handleTriggerSpecial = (level) => {
@@ -163,7 +194,10 @@ const PokemonBattleArena = ({
       
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-sky-400 to-indigo-900 opacity-60 transition-all duration-1000"></div>
-      <div className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay" style={{ backgroundImage: "url('https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg')" }}></div>
+      <div 
+        className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ${customBg ? 'opacity-70' : 'opacity-30 mix-blend-overlay'}`} 
+        style={{ backgroundImage: `url('${customBg || 'https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg'}')` }}
+      ></div>
       <div className={`absolute inset-0 bg-white transition-opacity duration-300 pointer-events-none ${screenEffect === 'flash-white' ? 'opacity-60' : 'opacity-0'}`}></div>
 
       {/* Special Overlay GIF */}
@@ -217,8 +251,8 @@ const PokemonBattleArena = ({
               </div>
            </div>
 
-           {/* Energy Orbs - Más compactos en móvil */}
-           <div className="absolute -left-3 md:-left-24 bottom-6 md:bottom-20 flex flex-col-reverse gap-1 md:gap-3">
+           {/* Energy Orbs - Ajustados para no salirse en tablets */}
+           <div className="absolute -left-4 md:-left-12 lg:-left-24 bottom-6 md:bottom-20 flex flex-col-reverse gap-1 md:gap-3">
              {[...Array(10)].map((_, i) => (
                 <div 
                   key={i} 
@@ -292,23 +326,27 @@ const PokemonBattleArena = ({
       </div>
 
       {/* OPERACIONES Y ACCIONES - Altura reducida en PC/Tablet */}
-      <div className="relative z-30 bg-white border-t-2 md:border-t-4 border-indigo-200 p-2 md:p-5 flex flex-col md:flex-row gap-2 md:gap-6 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
+      <div className="relative z-30 bg-white border-t-2 md:border-t-4 border-indigo-200 p-2 md:p-3 lg:p-5 flex flex-col md:flex-row gap-2 md:gap-4 lg:gap-10 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
         
         {/* Menu de Acciones - Muy comprimido en móvil */}
         <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar">
            
            {/* TIENDA RAPIDA */}
            <div className="shrink-0 md:w-full bg-sky-50 p-2 md:p-3 rounded-xl md:rounded-3xl border md:border-2 border-sky-100">
-              <div className="flex md:grid md:grid-cols-2 gap-2">
-                 <button onClick={handleBuyHealth} className="bg-emerald-400 text-white px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-2xl border-b-2 md:border-b-4 border-emerald-600 flex items-center md:flex-col gap-1.5 active:translate-y-0.5 active:border-b-0">
-                    <Heart size={14} md:size={18} fill="currentColor" />
-                    <span className="text-[8px] md:text-[10px] font-black uppercase whitespace-nowrap">+60HP (50)</span>
-                 </button>
-                 <button onClick={handleBuyDamage} className="bg-orange-400 text-white px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-2xl border-b-2 md:border-b-4 border-orange-600 flex items-center md:flex-col gap-1.5 active:translate-y-0.5 active:border-b-0">
-                    <Swords size={14} md:size={18} fill="currentColor" />
-                    <span className="text-[8px] md:text-[10px] font-black uppercase whitespace-nowrap">ATK+ (100)</span>
-                 </button>
-              </div>
+                <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-2">
+                   <button onClick={handleBuyHealth} className="bg-emerald-400 hover:bg-emerald-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-emerald-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
+                      <Heart size={20} fill="currentColor" />
+                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">+60 HP (50)</span>
+                   </button>
+                   <button onClick={handleBuyDamage} className="bg-orange-400 hover:bg-orange-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-orange-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
+                      <Swords size={20} fill="currentColor" />
+                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">ATK+ (100)</span>
+                   </button>
+                   <button onClick={handleBuyBackground} className="bg-sky-400 hover:bg-sky-300 text-white px-4 py-2.5 rounded-2xl border-b-4 border-sky-600 flex flex-col items-center transition-all active:translate-y-1 active:border-b-0">
+                      <Image size={20} fill="currentColor" />
+                      <span className="text-[10px] font-black mt-1 uppercase whitespace-nowrap">FONDO (150)</span>
+                   </button>
+                </div>
            </div>
 
            {/* ESPECIALES RAPIDOS */}
@@ -332,22 +370,22 @@ const PokemonBattleArena = ({
         </div>
 
         {/* MATH QUESTION - Optimizado para PC/Tablet */}
-        <div className="flex-1 bg-sky-50 rounded-2xl md:rounded-3xl p-3 md:p-6 border-2 md:border-4 border-sky-400 flex flex-col items-center justify-center">
+        <div className="flex-1 bg-sky-50 rounded-2xl md:rounded-3xl p-2 md:p-4 lg:p-6 border-2 md:border-4 border-sky-400 flex flex-col items-center justify-center shadow-inner">
             {!currentQuestion ? (
               <div className="text-sky-400 font-bold animate-pulse text-sm md:text-2xl uppercase italic">PREPARANDO...</div>
             ) : (
               <div className="w-full flex flex-col items-center">
-                <div className="text-indigo-400 font-black text-[8px] md:text-sm uppercase tracking-widest mb-1 md:mb-2 text-center">¡RESUELVE RÁPIDO!</div>
-                <h3 className="text-3xl md:text-7xl text-indigo-900 font-black mb-3 md:mb-6 drop-shadow-sm">{currentQuestion.question}</h3>
+                <div className="text-indigo-400 font-black text-[8px] md:text-xs lg:text-sm uppercase tracking-widest mb-1 md:mb-1 text-center">¡RESUELVE RÁPIDO!</div>
+                <h3 className="text-3xl md:text-5xl lg:text-7xl text-indigo-900 font-black mb-2 md:mb-4 lg:mb-6 drop-shadow-sm leading-tight text-center">{currentQuestion.question}</h3>
                 
-                <div className="grid grid-cols-2 gap-2 md:gap-5 w-full max-w-2xl">
+                <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-8 w-full max-w-2xl lg:max-w-3xl">
                    {currentQuestion.options.map((opt, i) => (
                       <button 
                          key={i} 
                          onClick={() => submitAnswer(opt)}
                          className={`
-                            py-3 md:py-6 px-2 rounded-xl md:rounded-3xl font-black text-xl md:text-4xl
-                            transition-all border-b-4 md:border-b-8 text-white active:translate-y-1 active:border-b-0
+                            py-3 md:py-4 lg:py-8 px-2 rounded-xl md:rounded-2xl lg:rounded-[2rem] font-black text-xl md:text-3xl lg:text-6xl
+                            transition-all border-b-4 lg:border-b-[10px] text-white active:translate-y-1 active:border-b-0
                             ${i === 0 ? 'bg-rose-400 border-rose-600' : ''}
                             ${i === 1 ? 'bg-sky-400 border-sky-600' : ''}
                             ${i === 2 ? 'bg-yellow-400 border-yellow-600' : ''}
