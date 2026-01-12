@@ -20,6 +20,9 @@ export const SOUNDS = {
   CRY_CHARMELEON: '/music/charmeleon_pokemon_-_2.mp3',
   CRY_CHARIZARD: '/music/charizard_angry_anime_cry_sfx.mp3',
   CRY_PIKACHU: '/music/pikachu_.mp3',
+  CRY_SQUIRTLE: '/music/Voicy_squırtle.mp3',
+  CRY_WARTORTLE: '/music/wartortle.mp3',
+  CRY_BLASTOISE: '/music/blastoide.mp3',
 };
 
 class AudioManager {
@@ -27,6 +30,15 @@ class AudioManager {
     this.music = null;
     this.currentTrack = null;
     this.isMuted = false;
+    this.isMusicMuted = false;
+  }
+
+  toggleMusicMute() {
+    this.isMusicMuted = !this.isMusicMuted;
+    if (this.music) {
+      this.music.volume = this.isMusicMuted ? 0 : 0.05; // Fallback to low volume or previous target
+    }
+    return this.isMusicMuted;
   }
 
   playSFX(path, volume = 0.4, fadeDuration = 0, maxDuration = 0) {
@@ -96,7 +108,7 @@ class AudioManager {
 
   setVolume(volume) {
     if (this.music) {
-      this.music.volume = Math.max(0, Math.min(1, volume));
+      this.music.volume = this.isMusicMuted ? 0 : Math.max(0, Math.min(1, volume));
     }
   }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles, Target, Coins, Image } from 'lucide-react';
+import { Heart, Shield, Swords, Zap, Home, Trophy, Star, Sparkles, Target, Coins, Image, Volume2, VolumeX, X, Lock } from 'lucide-react';
 import { usePokemonGame } from '../../hooks/usePokemonGame';
 import { audioManager, SOUNDS } from '../../utils/audio';
 
@@ -21,8 +21,27 @@ const PokemonBattleArena = ({
   onGameWin,
   bits,
   onSpendBits,
-  onEarnBits
+  onEarnBits,
+  selectedCards = []
 }) => {
+  const cardDescriptions = {
+    'gold-pika': 'Pikachu Dorada: +10% Daño. (+10 Copas con Pikachu)',
+    'mewtwo-card': 'Mewtwo Supremo: +3 Energía Inicial. (+10 Copas con Mewtwo)',
+    'mega-zard-card': 'Mega Charizard: Curaciones +40%. (+10 Copas con Charizard)',
+    'meowth-card': 'Meowth Suerte: +50% Bits por respuesta. (+10 Copas con Meowth)',
+    'squirtle-card': 'Squirtle Estrella: +15% Daño de Agua. (+10 Copas con Squirtle)'
+  };
+
+  const POKEDEX_CARDS = [
+    { id: "gold-pika", name: "Pikachu Dorada", image: "/images/pikachu-poket-dorada.webp" },
+    { id: "mewtwo-card", name: "Mewtwo Supremo", image: "/images/mewtoo.webp" },
+    { id: "mega-zard-card", name: "Mega Charizard", image: "/images/megacharizard.webp" },
+    { id: "meowth-card", name: "Meowth de la Suerte", image: "/images/Meowth.webp" },
+    { id: "squirtle-card", name: "Squirtle Estrella de Arte", image: "/images/squirtle1.webp" },
+  ];
+
+  const [zoomedCard, setZoomedCard] = useState(null);
+
   const {
     gameState,
     currentQuestion,
@@ -32,15 +51,49 @@ const PokemonBattleArena = ({
     buyHealth,
     buyDamage,
     evolutionStage,
-    playerForm
-  } = usePokemonGame(playerPokemon, mathMode, onGameOver, onGameWin, onEarnBits);
+    playerForm,
+    typeBonus,
+    enemyTypeBonus
+  } = usePokemonGame(playerPokemon, mathMode, onGameOver, onGameWin, onEarnBits, selectedCards);
+
+  const getTypeColor = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'fire': return 'bg-orange-500';
+      case 'water': return 'bg-blue-500';
+      case 'grass': return 'bg-emerald-500';
+      case 'electric': return 'bg-yellow-400';
+      case 'psychic': return 'bg-purple-500';
+      case 'ghost': return 'bg-indigo-700';
+      case 'dragon': return 'bg-emerald-700';
+      case 'poison': return 'bg-purple-600';
+      case 'ground': return 'bg-amber-700';
+      case 'rock': return 'bg-stone-500';
+      case 'ice': return 'bg-cyan-300';
+      case 'bug': return 'bg-lime-500';
+      case 'steel': return 'bg-slate-400';
+      case 'dark': return 'bg-zinc-800';
+      case 'fairy': return 'bg-pink-300';
+      case 'fighting': return 'bg-red-700';
+      case 'flying': return 'bg-sky-400';
+      default: return 'bg-gray-400';
+    }
+  };
+
+  const playerType = playerPokemon.type || 'normal';
+  const enemyType = enemyPokemon?.types?.[0]?.type?.name || 'normal';
 
   const [animating, setAnimating] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [screenEffect, setScreenEffect] = useState(null);
   const [overlayGif, setOverlayGif] = useState(null);
   const [customBg, setCustomBg] = useState(null);
+  const [musicMuted, setMusicMuted] = useState(audioManager.isMusicMuted);
   const prevStageRef = useRef(evolutionStage);
+
+  const toggleMute = () => {
+    const newState = audioManager.toggleMusicMute();
+    setMusicMuted(newState);
+  };
 
   const GET_ATTACK_NAMES = (stage, type = 'normal') => {
      const t = type.toUpperCase();
@@ -49,7 +102,7 @@ const PokemonBattleArena = ({
      return ["TORMENTA ELEMENTAL", "VÓRTICE MÁXIMO", `APOCALIPSIS ${t}`];
   };
 
-  const attackNames = GET_ATTACK_NAMES(evolutionStage, playerPokemon.type);
+  const attackNames = GET_ATTACK_NAMES(evolutionStage, playerForm.type);
 
   useEffect(() => {
     if (evolutionStage > prevStageRef.current) {
@@ -70,7 +123,10 @@ const PokemonBattleArena = ({
       charmeleon: SOUNDS.CRY_CHARMELEON,
       charizard: SOUNDS.CRY_CHARIZARD,
       'charizard-mega-x': SOUNDS.CRY_CHARIZARD,
-      pikachu: SOUNDS.CRY_PIKACHU
+      pikachu: SOUNDS.CRY_PIKACHU,
+      squirtle: SOUNDS.CRY_SQUIRTLE,
+      wartortle: SOUNDS.CRY_WARTORTLE,
+      blastoise: SOUNDS.CRY_BLASTOISE,
     };
     return cries[name] || null;
   }
@@ -102,6 +158,9 @@ const PokemonBattleArena = ({
       if (isMedium) setScreenEffect('flash-white');
       if (playerForm.name === 'pikachu') {
         audioManager.playSFX(isMedium ? SOUNDS.PIKACHU_SPECIAL : SOUNDS.PIKACHU_RUNNING, 0.7);
+      } else if (['squirtle', 'wartortle', 'blastoise'].includes(playerForm.name)) {
+        const cry = GET_CRY(playerForm.name);
+        audioManager.playSFX(cry, isMedium ? 0.8 : 0.7);
       } else {
         const cry = GET_CRY(playerForm.name);
         if (cry) audioManager.playSFX(cry, isMedium ? 0.8 : 0.7);
@@ -117,6 +176,21 @@ const PokemonBattleArena = ({
           ? 'https://media.giphy.com/media/7ISIRaCMrgFfa/giphy.gif'
           : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHdvbGo2djAyd3ZrcDhkdmg3ZTg5b241bHk2a2swemdlbnVrbmoxNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/68kKd6gmSKYww/giphy.gif'
         );
+      } else if (playerForm.name === 'squirtle') {
+        setOverlayGif(isMedium
+          ? '/images/2energiassquirtle.gif'
+          : 'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3d29jbnpkMnN5ejB4anJoYXI1dGZsYjVjcHZ3dDZqejZ0cGcwb3R0NSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Wklt2njWsEQzS/giphy.gif'
+        );
+      } else if (playerForm.name === 'wartortle') {
+        setOverlayGif(isMedium
+          ? 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcno2eWZoa2poZXI4dzM4OXJwdHlxY3F5YXdnbjc0MTJnOWJkZWtiMiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/JMPAslYn9YTEA/giphy.gif'
+          : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcTduZWV3bDg2eHpoZjE4NXg2dTBmdjhmNm14dmxzN3Z0Z3ltZnl2NyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/JYfQy6aDhezb65mpPU/giphy.gif'
+        );
+      } else if (playerForm.name === 'blastoise') {
+        setOverlayGif(isMedium
+          ? 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjhnMWcyc2NrZ2JqYnhhbW5yd2FrYTAxOXRrYW90cmxodWV5Ym9pZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Q6JxEVlKBENJsU9I33/giphy.gif'
+          : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjhnMWcyc2NrZ2JqYnhhbW5yd2FrYTAxOXRrYW90cmxodWV5Ym9pZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tDT5nL8EXbQhW/giphy.gif'
+        );
       }
       setTimeout(() => setOverlayGif(null), isMedium ? 4000 : 3500);
       setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, isMedium ? 3000 : 2500);
@@ -127,6 +201,9 @@ const PokemonBattleArena = ({
       
       if (playerForm.name === 'pikachu') {
         audioManager.playSFX(SOUNDS.PIKACHU_SPECIAL, 1.0);
+      } else if (['squirtle', 'wartortle', 'blastoise'].includes(playerForm.name)) {
+        const cry = GET_CRY(playerForm.name);
+        audioManager.playSFX(cry, 1.0);
       } else {
         const cry = GET_CRY(playerForm.name);
         if (cry) audioManager.playSFX(cry, 1.0);
@@ -139,11 +216,26 @@ const PokemonBattleArena = ({
       } else if (playerForm.name === 'pikachu') {
         setOverlayGif('https://media.giphy.com/media/12r4pHjvAOv48o/giphy.gif');
         setTimeout(() => setOverlayGif(null), 5500);
+      } else if (playerForm.name === 'squirtle') {
+        setOverlayGif('/images/5energiassquirtle.gif');
+        setTimeout(() => setOverlayGif(null), 5500);
+      } else if (playerForm.name === 'wartortle') {
+        setOverlayGif('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExcno2eWZoa2poZXI4dzM4OXJwdHlxY3F5YXdnbjc0MTJnOWJkZWtiMiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/kdtqSW38KsXJTnxZXF/giphy.gif');
+        setTimeout(() => setOverlayGif(null), 5500);
+      } else if (playerForm.name === 'blastoise') {
+        setOverlayGif('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjhnMWcyc2NrZ2JqYnhhbW5yd2FrYTAxOXRrYW90cmxodWV5Ym9pZCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Tj3YjGVf2DtaXP0aDB/giphy.gif');
+        setTimeout(() => setOverlayGif(null), 5500);
       }
       setTimeout(() => { setAnimating(null); setFeedback(null); setScreenEffect(null); }, 4000);
     } else if (gameState.lastAction === 'victory') {
-      setFeedback('¡GANASTE!');
-      audioManager.playSFX(SOUNDS.VICTORY, 0.6);
+      const victoryText = gameState.bonusCups > 0 ? `¡GANASTE! +15 (+${gameState.bonusCups} BONUS CARTAS)` : '¡GANASTE! +15';
+      setFeedback(victoryText);
+      if (['squirtle', 'wartortle', 'blastoise'].includes(playerForm.name)) {
+        const cry = GET_CRY(playerForm.name);
+        audioManager.playSFX(cry, 0.8);
+      } else {
+        audioManager.playSFX(SOUNDS.VICTORY, 0.6);
+      }
     }
   }, [gameState.lastAction, gameState.turn, attackNames, playerForm.name]);
 
@@ -162,7 +254,7 @@ const PokemonBattleArena = ({
       onSpendBits(150);
       const bg = playerForm.name === 'pikachu'
         ? 'https://media.giphy.com/media/G2qi0ogzHYMVDfQoVb/giphy.gif'
-        : 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3ZmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6ZnpmemZ6JmN0PWcvMTRkdUk2bzFLUUY4cXMvc291cmNlLmdpZg--/giphy.gif';
+        : '/images/fondo1.webp';
       setCustomBg(bg);
       audioManager.playSFX(SOUNDS.BUY, 0.6);
     } else {
@@ -226,11 +318,14 @@ const PokemonBattleArena = ({
                <div className="flex items-center gap-0.5 md:gap-1 bg-purple-500/80 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-purple-300 shadow-sm">
                   <Star size={10} md:size={14} className="text-yellow-200" fill="currentColor" />
                   <span className="text-white font-black text-[10px] md:text-sm tracking-widest">x{gameState.damageMultiplier.toFixed(1)}</span>
-               </div>
-            </div>
+                {selectedCards.includes('gold-pika') && <Zap size={10} className="text-yellow-400 animate-pulse" fill="currentColor" />}
+             </div>
+          </div>
         </div>
 
-        <div className="w-8 md:w-12"></div>
+        <button onClick={toggleMute} className="bg-slate-800 p-2 md:p-2.5 rounded-xl md:rounded-2xl hover:bg-slate-700 transition-all shadow-[0_3px_0_rgb(30,41,59)] md:shadow-[0_5px_0_rgb(30,41,59)] active:shadow-none active:translate-y-[3px]">
+          {musicMuted ? <VolumeX className="text-rose-400" size={20} md:size={24} /> : <Volume2 className="text-white" size={20} md:size={24} />}
+        </button>
       </div>
 
       {/* BATTLE STAGE - Flex-1 asegura que tome el espacio sobrante */}
@@ -238,25 +333,58 @@ const PokemonBattleArena = ({
         
         {/* Player Container */}
         <div className="relative flex flex-col items-center group z-10 transition-transform duration-500">
+           {/* EQUIPPED CARDS VIEW (Horizontal above Player HP) */}
+           {selectedCards.length > 0 && (
+             <div className="flex gap-2 mb-2 z-30 items-center">
+               {selectedCards.map(id => {
+                 const card = POKEDEX_CARDS.find(c => c.id === id);
+                 if (!card) return null;
+                 return (
+                   <div 
+                     key={id} 
+                     onClick={() => setZoomedCard(card)}
+                     className="w-8 h-12 md:w-16 md:h-24 rounded-lg border-2 border-yellow-400 overflow-hidden shadow-lg hover:scale-110 hover:-translate-y-1 transition-all cursor-pointer group relative bg-slate-800"
+                   >
+                      <img src={card.image} className="w-full h-full object-contain" />
+                      
+                      {/* Tooltip Quick View */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900/95 text-white text-[8px] md:text-[10px] p-2 rounded-lg border border-yellow-500 w-24 md:w-32 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-2xl backdrop-blur-sm z-[100]">
+                         <div className="font-black text-yellow-400 mb-0.5 uppercase tracking-tighter text-[9px]">MEJORA ACTIVA</div>
+                         <div className="font-medium leading-tight">{cardDescriptions[id]}</div>
+                      </div>
+                   </div>
+                 );
+               })}
+             </div>
+           )}
+
            {/* HP BAR PLAYER */}
-           <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-blue-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+            <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-blue-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+              {typeBonus > 0 && (
+                 <div className="absolute -right-1 top-4 md:top-6 bg-yellow-400 text-yellow-900 text-[6px] md:text-[10px] font-black px-2 py-0.5 rounded-l-full animate-bounce z-10 shadow-sm border-y border-l border-yellow-600">
+                    ¡VENTAJA! +20
+                 </div>
+              )}
               <div className="flex justify-between items-center mb-0.5 md:mb-1.5">
-                <span className="text-blue-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{playerForm.display}</span>
-                <span className="text-blue-800 font-black text-[8px] md:text-sm">{gameState.playerHp}HP</span>
+                <div className="flex flex-col">
+                   <span className="text-blue-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{playerForm.display}</span>
+                   <span className={`text-[6px] md:text-[10px] text-white font-black uppercase px-1.5 rounded-md self-start ${getTypeColor(playerType)}`}>{playerType}</span>
+                </div>
+                <span className="text-blue-800 font-black text-[8px] md:text-sm">{Math.round(gameState.playerHp)}HP</span>
               </div>
               <div className="w-full bg-slate-200 h-2 md:h-6 rounded-full overflow-hidden border border-slate-300 shadow-inner">
                 <div className={`h-full transition-all duration-700 rounded-full ${gameState.playerHp < 30 ? 'bg-rose-500 animate-pulse' : 'bg-blue-500'}`} style={{ width: `${gameState.playerHp}%` }}>
                    <div className="w-full h-1/2 bg-white/30 rounded-full"></div>
                 </div>
               </div>
-           </div>
+            </div>
 
            {/* Energy Orbs - Ajustados para no salirse en tablets */}
            <div className="absolute -left-4 md:-left-12 lg:-left-24 bottom-6 md:bottom-20 flex flex-col-reverse gap-1 md:gap-3">
              {[...Array(10)].map((_, i) => (
                 <div 
                   key={i} 
-                  className={`w-3 h-3 md:w-8 md:h-8 rounded-full border border-white/20 transition-all duration-300 transform ${i < gameState.energy ? 'bg-yellow-400 shadow-[0_0_10px_#fbbf24] scale-110' : 'bg-white/10'}`}
+                  className={`w-3 h-3 md:w-8 md:h-8 rounded-full border border-white/20 transition-all duration-300 transform ${i < gameState.energy ? `${getTypeColor(playerType)} shadow-[0_0_15px_rgba(255,255,255,0.4)] scale-110` : 'bg-white/10'}`}
                 >
                   {i < gameState.energy && <Zap size={8} className="text-white m-auto md:mt-1.5" fill="currentColor" />}
                 </div>
@@ -295,10 +423,18 @@ const PokemonBattleArena = ({
         {/* Enemy Container */}
         <div className="relative flex flex-col items-center z-10 transition-transform duration-500">
            {/* HP BAR ENEMY */}
-           <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-rose-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+            <div className="mb-2 md:mb-4 bg-white p-1.5 md:p-3 rounded-2xl md:rounded-3xl border-2 md:border-4 border-rose-600 w-28 md:w-64 shadow-xl relative overflow-hidden group">
+              {enemyTypeBonus > 0 && (
+                 <div className="absolute -left-1 top-4 md:top-6 bg-rose-500 text-white text-[6px] md:text-[10px] font-black px-2 py-0.5 rounded-r-full animate-bounce z-10 shadow-sm border-y border-r border-rose-700">
+                    ¡PELIGRO! +{enemyTypeBonus}
+                 </div>
+              )}
               <div className="flex justify-between items-center mb-0.5 md:mb-1.5">
-                <span className="text-rose-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{enemyPokemon.name}</span>
-                <span className="text-rose-800 font-black text-[8px] md:text-sm">{gameState.enemyHp}HP</span>
+                <div className="flex flex-col">
+                   <span className="text-rose-600 font-black uppercase text-[8px] md:text-sm italic truncate w-12 md:w-auto tracking-tight">{enemyPokemon.name}</span>
+                   <span className={`text-[6px] md:text-[10px] text-white font-black uppercase px-1.5 rounded-md self-start ${getTypeColor(enemyType)}`}>{enemyType}</span>
+                </div>
+                <span className="text-rose-800 font-black text-[8px] md:text-sm">{Math.round(gameState.enemyHp)}HP</span>
               </div>
               <div className="w-full bg-slate-200 h-2 md:h-6 rounded-full overflow-hidden border border-slate-300 shadow-inner">
                 <div 
@@ -325,8 +461,8 @@ const PokemonBattleArena = ({
         </div>
       </div>
 
-      {/* OPERACIONES Y ACCIONES - Altura reducida en PC/Tablet */}
-      <div className="relative z-30 bg-white border-t-2 md:border-t-4 border-indigo-200 p-2 md:p-3 lg:p-5 flex flex-col md:flex-row gap-2 md:gap-4 lg:gap-10 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
+      {/* OPERACIONES Y ACCIONES - Altura reducida en PC/Tablet para evitar solapamiento */}
+      <div className="relative z-30 bg-white border-t-2 md:border-t-4 border-indigo-200 p-2 md:p-3 lg:p-4 flex flex-col md:flex-row gap-2 md:gap-4 lg:gap-6 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.1)]">
         
         {/* Menu de Acciones - Muy comprimido en móvil */}
         <div className="w-full md:w-1/3 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar">
@@ -369,23 +505,25 @@ const PokemonBattleArena = ({
            </div>
         </div>
 
-        {/* MATH QUESTION - Optimizado para PC/Tablet */}
-        <div className="flex-1 bg-sky-50 rounded-2xl md:rounded-3xl p-2 md:p-4 lg:p-6 border-2 md:border-4 border-sky-400 flex flex-col items-center justify-center shadow-inner">
+        {/* MATH QUESTION - Optimizado para evitar robar espacio vertical */}
+        <div className="flex-1 bg-sky-50 rounded-2xl md:rounded-3xl p-2 md:p-4 lg:p-4 border-2 md:border-4 border-sky-400 flex flex-col items-center justify-center shadow-inner">
             {!currentQuestion ? (
               <div className="text-sky-400 font-bold animate-pulse text-sm md:text-2xl uppercase italic">PREPARANDO...</div>
             ) : (
               <div className="w-full flex flex-col items-center">
-                <div className="text-indigo-400 font-black text-[8px] md:text-xs lg:text-sm uppercase tracking-widest mb-1 md:mb-1 text-center">¡RESUELVE RÁPIDO!</div>
-                <h3 className="text-3xl md:text-5xl lg:text-7xl text-indigo-900 font-black mb-2 md:mb-4 lg:mb-6 drop-shadow-sm leading-tight text-center">{currentQuestion.question}</h3>
+                <div className="text-indigo-400 font-black text-[8px] md:text-xs uppercase tracking-widest mb-1 text-center">¡RESUELVE RÁPIDO!</div>
+                <h3 className={`text-xl md:text-3xl lg:text-4xl text-indigo-900 font-black mb-2 md:mb-4 lg:mb-4 drop-shadow-sm leading-tight text-center whitespace-pre-line ${currentQuestion.question.includes('{') || currentQuestion.question.includes('=>') ? 'font-mono bg-indigo-950/5 p-4 rounded-xl border border-indigo-200/50' : ''}`}>
+                  {currentQuestion.question}
+                </h3>
                 
-                <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-8 w-full max-w-2xl lg:max-w-3xl">
+                <div className="grid grid-cols-2 gap-2 md:gap-4 lg:gap-4 w-full max-w-2xl lg:max-w-4xl">
                    {currentQuestion.options.map((opt, i) => (
                       <button 
                          key={i} 
                          onClick={() => submitAnswer(opt)}
                          className={`
-                            py-3 md:py-4 lg:py-8 px-2 rounded-xl md:rounded-2xl lg:rounded-[2rem] font-black text-xl md:text-3xl lg:text-6xl
-                            transition-all border-b-4 lg:border-b-[10px] text-white active:translate-y-1 active:border-b-0
+                            py-3 md:py-4 lg:py-4 px-2 rounded-xl md:rounded-2xl lg:rounded-[1.5rem] font-black text-xl md:text-3xl lg:text-4xl
+                            transition-all border-b-4 lg:border-b-[6px] text-white active:translate-y-1 active:border-b-0
                             ${i === 0 ? 'bg-rose-400 border-rose-600' : ''}
                             ${i === 1 ? 'bg-sky-400 border-sky-600' : ''}
                             ${i === 2 ? 'bg-yellow-400 border-yellow-600' : ''}
@@ -400,6 +538,59 @@ const PokemonBattleArena = ({
             )}
         </div>
       </div>
+
+      {/* Card Zoom Modal */}
+      {zoomedCard && (
+         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 backdrop-blur-xl bg-black/80 animate-in fade-in duration-300">
+            <button 
+              onClick={() => setZoomedCard(null)}
+              className="absolute top-6 right-6 text-white hover:text-rose-400 transition-colors p-2 bg-white/10 rounded-full z-[120]"
+            >
+              <X size={32} />
+            </button>
+
+            <div className="relative group max-w-sm w-full animate-in zoom-in-95 duration-500">
+               <div className="absolute -inset-10 z-0 pointer-events-none">
+                  {[...Array(12)].map((_, i) => (
+                    <Sparkles 
+                      key={i}
+                      className="absolute text-yellow-400 animate-pulse"
+                      size={24 + Math.random() * 24}
+                      style={{
+                        top: `${Math.random() * 100}%`,
+                        left: `${Math.random() * 100}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                        opacity: 0.6
+                      }}
+                    />
+                  ))}
+               </div>
+
+               <div className="relative z-10 bg-slate-800 rounded-[3rem] p-6 border-8 border-yellow-400 shadow-[0_0_100px_rgba(234,179,8,0.4)] overflow-hidden">
+                  <div className="aspect-[3/4] rounded-[2rem] overflow-hidden bg-slate-900 border-4 border-yellow-500/30">
+                     <img src={zoomedCard.image} alt={zoomedCard.name} className="w-full h-full object-contain shadow-2xl" />
+                  </div>
+                  <div className="mt-6 text-center">
+                      <h2 className="text-2xl md:text-3xl font-black text-yellow-400 uppercase tracking-tighter mb-2 italic drop-shadow-md">{zoomedCard.name}</h2>
+                      <div className="bg-yellow-400/10 p-4 rounded-2xl border border-yellow-500/30 backdrop-blur-sm">
+                        <div className="text-yellow-400 font-black text-[10px] uppercase tracking-widest mb-1.5 flex items-center justify-center gap-2">
+                          <Sparkles size={12} /> MEJORA ACTIVA <Sparkles size={12} />
+                        </div>
+                        <p className="text-white font-medium text-xs md:text-sm leading-snug">
+                          {cardDescriptions[zoomedCard.id]}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setZoomedCard(null)}
+                        className="mt-4 w-full py-3 bg-yellow-500 text-slate-900 font-black rounded-xl border-b-4 border-yellow-700 transition-all active:border-b-0 active:translate-y-1"
+                      >
+                        ¡ENTENDIDO!
+                      </button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
@@ -425,6 +616,14 @@ const PokemonBattleArena = ({
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
       `}} />
     </div>
   );

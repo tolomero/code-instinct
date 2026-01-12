@@ -60,6 +60,7 @@ export default function App() {
   const [showVictoryGif, setShowVictoryGif] = useState(false);
   const [unlockedPokemonIds, setUnlockedPokemonIds] = useState(() => JSON.parse(localStorage.getItem('unlockedPokemonIds') || '[7, 25]'));
   const [unlockedCardIds, setUnlockedCardIds] = useState(() => JSON.parse(localStorage.getItem('unlockedCardIds') || '[]'));
+  const [selectedCards, setSelectedCards] = useState([]);
   const [cups, setCups] = useState(() => parseInt(localStorage.getItem('cups') || '0'));
 
   // Sync with Local Storage
@@ -338,6 +339,8 @@ export default function App() {
         cups={cups}
         unlockedPokemonIds={unlockedPokemonIds}
         unlockedCardIds={unlockedCardIds}
+        selectedCards={selectedCards}
+        onSelectCards={setSelectedCards}
         onUnlockPokemon={(id, cost) => {
           setCups(c => c - cost);
           setUnlockedPokemonIds(prev => [...new Set([...prev, id])]);
@@ -407,9 +410,10 @@ export default function App() {
            onGameOver={(won) => {
              setGameState(won ? 'won' : 'lost');
            }}
-           onGameWin={() => {
-             // Victory against Boss 15 CUPS
-             setCups(c => c + 15);
+           selectedCards={selectedCards}
+           onGameWin={(bonusCups = 0) => {
+             // Victory against Boss 15 CUPS + Bonus
+             setCups(c => c + 15 + bonusCups);
              setGameState('won');
              setShowVictoryGif(true);
              setTimeout(() => setShowVictoryGif(false), 6000);

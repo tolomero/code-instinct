@@ -1,64 +1,95 @@
 import React from 'react';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, Trophy, Lock } from 'lucide-react';
 import { PLAYER_CHARACTERS } from '../../constants/gameData';
 
 const CharacterSelection = ({ onBack, onSelectCharacter, selectedId, cups = 0 }) => {
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 md:p-6 font-mono border-[10px] md:border-[15px] border-blue-900 border-double text-center relative overflow-y-auto bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950">
-      <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+    <div className="min-h-screen bg-indigo-900 flex flex-col items-center p-4 md:p-12 font-sans select-none relative overflow-y-auto">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 to-indigo-900 opacity-60"></div>
+      <div className="absolute inset-0 bg-[url('https://wallpapers.com/images/hd/pokemon-battle-background-7u32d84715767222.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
       
-      <div className="absolute top-4 right-4 md:top-10 md:right-10 flex items-center gap-2 bg-yellow-500 text-black px-4 py-2 rounded-full font-black italic shadow-[0_0_15px_rgba(234,179,8,0.5)]">
-        🏆 {cups} COPAS
+      {/* Header */}
+      <div className="w-full max-w-6xl flex justify-between items-center mb-12 relative z-20">
+        <button 
+          onClick={onBack}
+          className="bg-rose-500 p-3 rounded-2xl hover:bg-rose-400 transition-all border-b-4 border-rose-700 active:translate-y-1 active:border-b-0 shadow-lg"
+        >
+          <ArrowLeft className="text-white" size={24} />
+        </button>
+
+        <div className="flex items-center gap-3 bg-yellow-400 px-6 py-2.5 rounded-2xl border-b-4 border-yellow-600 shadow-xl">
+          <Trophy size={24} className="text-yellow-900" fill="currentColor" />
+          <span className="text-yellow-900 font-black text-2xl italic tracking-tighter uppercase">{cups} COPAS</span>
+        </div>
       </div>
 
-      <button 
-        onClick={onBack} 
-        className="absolute top-4 left-4 md:top-10 md:left-10 p-2 md:p-4 bg-white/10 hover:bg-white/20 rounded-full transition-colors flex items-center gap-2 text-white font-black uppercase italic z-50 text-xs md:text-base border border-white/10"
-      >
-        <ArrowLeft size={16} /> Volver
-      </button>
-      
-      <div className="relative mb-8 md:mb-12">
-        <h2 className="text-4xl md:text-7xl font-black text-blue-600 italic uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(37,99,235,0.4)]" style={{ fontFamily: "'Orbitron', sans-serif" }}>Select Hero</h2>
-        <div className="h-1 w-full bg-gradient-to-r from-transparent via-blue-600 to-transparent mt-2"></div>
+      <div className="relative z-10 text-center mb-12">
+        <h1 className="text-4xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-yellow-500 italic tracking-tighter drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] uppercase">
+          ELIGE TU HÉROE
+        </h1>
+        <div className="bg-white/10 backdrop-blur-md px-8 py-3 rounded-full border border-white/10 text-white/80 font-bold text-sm md:text-base mt-4 uppercase tracking-[0.2em]">
+          Personajes únicos con habilidades especiales
+        </div>
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 w-full max-w-6xl pb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 w-full max-w-7xl relative z-10 pb-20">
         {PLAYER_CHARACTERS.map((char) => {
           const isLocked = char.requiredCups && cups < char.requiredCups;
+          const isSelected = selectedId === char.id;
           
           return (
             <div 
               key={char.id} 
-              className={`group bg-slate-900 border-4 ${selectedId === char.id ? 'border-blue-500' : 'border-slate-700'} p-4 md:p-6 rounded-3xl ${isLocked ? 'opacity-70 cursor-not-allowed' : 'hover:border-blue-400 cursor-pointer'} transition-all relative overflow-hidden`} 
+              className={`
+                group relative bg-white/5 backdrop-blur-sm border-4 rounded-[2.5rem] p-6 transition-all duration-300
+                ${isSelected ? 'border-yellow-400 bg-white/10 shadow-[0_0_40px_rgba(234,179,8,0.3)] scale-105' : 'border-white/10 hover:border-white/30 hover:bg-white/10'}
+                ${isLocked ? 'grayscale opacity-60 cursor-not-allowed' : 'cursor-pointer'}
+              `}
               onClick={() => !isLocked && onSelectCharacter(char)}
             >
               {isLocked && (
-                <div className="absolute inset-0 bg-black/60 z-10 flex flex-col items-center justify-center p-4">
-                  <span className="text-3xl mb-2">🔒</span>
-                  <span className="text-yellow-500 font-black text-[10px] md:text-xs uppercase italic">{char.requiredCups} COPAS</span>
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-indigo-950/60 rounded-[2.2rem]">
+                  <Lock size={48} className="text-white/40 mb-4" />
+                  <div className="bg-yellow-400 text-yellow-950 px-4 py-1.5 rounded-full font-black text-[10px] md:text-xs uppercase italic tracking-widest shadow-lg">
+                    {char.requiredCups} COPAS
+                  </div>
                 </div>
               )}
               
-              <div className="h-28 md:h-48 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <img 
-                  src={char.image} 
-                  alt={char.name} 
-                  style={{ filter: isLocked ? 'contrast(0) brightness(0)' : 'none' }}
-                  className={`max-h-full object-contain ${char.idleFlip ? '-scale-x-100' : ''}`}
-                />
+              <div className="aspect-square flex items-center justify-center mb-6 relative">
+                 <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                 <img 
+                    src={char.image} 
+                    alt={char.name} 
+                    className={`h-full object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-110 ${char.idleFlip ? '-scale-x-100' : ''}`}
+                 />
               </div>
-              <h3 className="text-xl md:text-2xl font-black text-white mb-2 uppercase italic">{isLocked ? '???' : char.name}</h3>
-              {selectedId === char.id && (
-                <div className="absolute top-0 right-0 p-2 bg-blue-600 text-white font-black text-[10px] uppercase italic">Selected</div>
-              )}
-              {!isLocked && (
-                <div className="py-2 px-4 bg-blue-600 text-white font-black skew-x-[-10deg] inline-block uppercase text-[10px] md:text-sm group-hover:bg-white group-hover:text-blue-600 transition-colors">Choose</div>
-              )}
+
+              <div className="text-center">
+                <h3 className="text-xl md:text-2xl font-black text-white mb-4 uppercase italic tracking-tighter drop-shadow-md">
+                   {isLocked ? '???' : char.name}
+                </h3>
+                
+                {isSelected ? (
+                   <div className="bg-yellow-400 text-yellow-950 py-2 px-6 rounded-xl font-black text-sm md:text-base uppercase italic shadow-lg">
+                      SELECCIONADO
+                   </div>
+                ) : !isLocked && (
+                   <div className="bg-sky-500 text-white py-2 px-6 rounded-xl font-black text-sm md:text-base uppercase italic border-b-4 border-sky-700 active:translate-y-1 active:border-b-0 transition-all hover:bg-sky-400">
+                      ELEGIR
+                   </div>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+        .font-sans { font-family: 'Fredoka One', cursive, sans-serif; }
+      `}} />
     </div>
   );
 };
